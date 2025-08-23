@@ -1,0 +1,161 @@
+.box {
+  min-height: 650px;
+  width: 1000px;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: none;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Form login */
+.container {
+  background: linear-gradient(
+    to bottom,
+    rgba(128, 169, 232, 0.49) 0%,
+    rgba(124, 169, 237, 0.11) 100%
+  );
+  backdrop-filter: blur(10px); /* mờ nền phía sau */
+  padding: 20px 80px 20px 80px;
+  border-radius: 24px;
+  z-index: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  height: 80%;
+  justify-content: center;
+  border: #608ed3 1px solid;
+}
+
+.logo {
+  font-size: 32px;
+  font-weight: bold;
+  text-align: center;
+  color: #fff; /* đổi màu chữ */
+}
+
+.taglogin {
+  display: block;
+  font-size: 20px;
+  text-align: center;
+  color: #fff;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tagemail,
+.tagpassword {
+  font-size: 14px;
+  color: #fff;
+}
+
+.inputField {
+  width: 100%;
+  padding: 12px 15px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: border-color 0.3s;
+  color: #333; /* chữ trong input */
+  background: rgba(255, 255, 255, 0.1); /* nền input mờ để nhìn chữ trắng */
+  background-color: #fff;
+}
+
+.inputField::placeholder {
+  color: #333; /* placeholder trắng */
+  font-size: 0.7rem;
+  opacity: 0.6;
+}
+
+.inputField:focus {
+  border-color: #49a6fc;
+  outline: none;
+}
+
+.tagforgot {
+  text-align: right;
+  font-size: 13px;
+  color: #fff;
+  cursor: pointer;
+}
+
+.loginButton {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  background: #49a6fc;
+  color: #fff; /* chữ trắng */
+  font-size: 16px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.loginButton:hover {
+  background: #1e90ff;
+}
+
+.tagor {
+  text-align: center;
+  color: #fff;
+  font-size: 14px;
+}
+
+.register {
+  text-align: center;
+  font-size: 14px;
+  color: #fff;
+}
+
+.registerLink {
+  color: #fff;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.registerLink:hover {
+  text-decoration: underline;
+}
+
+/* Social login */
+.socialLogin {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.socialButton {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 0;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background: white;
+  color: #fff; /* chữ trắng */
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.3s, border-color 0.3s;
+}
+
+.socialButton:hover {
+  background: #f0f0f0;
+  border-color: #49a6fc;
+}
+
+/* Màu riêng cho icon - đổi trắng */
+.googleIcon,
+.githubIcon,
+.facebookIcon {
+  color: #333;
+}

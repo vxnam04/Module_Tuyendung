@@ -1,0 +1,11 @@
+/* Toàn trang background gradient */
+.pageBackground {
+  min-height: 100vh; /* chiếm toàn bộ chiều cao màn hình */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-image: url("/images/background.png"); /* đường dẫn ảnh */
+  background-size: cover; /* ảnh phủ đầy */
+  background-position: center; /* căn giữa ảnh */
+  background-repeat: no-repeat; /* không lặp lại */
+}

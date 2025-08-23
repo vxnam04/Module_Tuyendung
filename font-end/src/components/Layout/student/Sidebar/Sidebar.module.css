@@ -1,0 +1,257 @@
+/* ====== Sidebar base ====== */
+.sidebar {
+  width: 260px; /* rộng hơn 230px */
+  height: 100vh; /* full chiều cao màn hình */
+  background-color: #ffffff;
+  border-right: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  transition: width 0.3s;
+  overflow: hidden;
+}
+
+.sidebar.collapsed {
+  width: 70px; /* khi thu gọn cũng to hơn */
+}
+
+/* ====== User section ====== */
+.userSection {
+  display: flex;
+  align-items: center;
+  justify-content: center; /* căn giữa avatar + username */
+  gap: 10px;
+  height: 65px; /* cao hơn */
+  padding: 0 14px;
+  border-bottom: 1px solid #e5e7eb;
+  flex-shrink: 0;
+  width: 100%;
+  box-sizing: border-box;
+  transition: justify-content 0.3s;
+}
+
+.avatar {
+  width: 36px;
+  height: 36px;
+  background-color: #9ca3af;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-weight: bold;
+  font-size: 15px;
+  flex-shrink: 0;
+  transition: all 0.3s;
+}
+
+.username {
+  transition: opacity 0.3s, transform 0.3s;
+  font-size: 15px; /* chữ to hơn */
+}
+
+/* Khi collapsed */
+.sidebar.collapsed .userSection {
+  justify-content: center;
+}
+
+.sidebar.collapsed .username {
+  opacity: 0;
+  transform: translateX(30px);
+}
+
+.sidebar.collapsed .avatar {
+  transform: scale(0.9);
+}
+
+/* ====== Menu Wrapper ====== */
+.menuWrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: 10px 0;
+}
+
+/* Group label */
+.menuGroup {
+  font-size: 13px; /* chữ to hơn */
+  font-weight: 600;
+  color: #9ca3af;
+  margin: 18px 0 8px 0px;
+  transition: opacity 0.3s, transform 0.3s;
+}
+
+.sidebar.collapsed .menuGroup {
+  opacity: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+/* ====== Base menu item ====== */
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: 14px; /* khoảng cách icon - chữ rộng hơn */
+  padding: 10px 18px; /* padding lớn hơn */
+  font-size: 15px; /* chữ to hơn */
+  color: #374151;
+  cursor: pointer;
+  border-radius: 6px;
+  white-space: nowrap;
+  transition: background-color 0.3s, color 0.3s, justify-content 0.3s;
+}
+
+.menuItem:hover {
+  background-color: #f3f4f6;
+}
+
+.menuItem span {
+  transition: opacity 0.3s, width 0.3s;
+}
+
+.menuItem .icon {
+  flex-shrink: 0;
+  font-size: 18px; /* icon to hơn */
+}
+
+/* collapsed: chỉ hiện icon */
+.sidebar.collapsed .menuItem {
+  justify-content: center;
+}
+
+.sidebar.collapsed .menuItem span {
+  opacity: 0;
+  width: 0;
+  overflow: hidden;
+}
+
+/* ====== Bottom Menu ====== */
+.bottomMenu {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 0;
+  border-top: 1px solid #e5e7eb;
+  padding-left: 14px;
+}
+
+.logout {
+  color: #ef4444;
+}
+
+/* ====== Nhóm màu riêng cho từng item ====== */
+
+/* Tổng quan */
+.dashboard .icon {
+  color: #2563eb; /* xanh dương */
+}
+.insights .icon {
+  color: #16a34a; /* xanh lá */
+}
+
+/* Dịch vụ */
+.rewards .icon {
+  color: #f59e0b; /* vàng */
+}
+.exchange .icon {
+  color: #a855f7; /* tím */
+}
+.myServices .icon {
+  color: #dc2626; /* đỏ */
+}
+.promotions .icon {
+  color: #f97316; /* cam */
+}
+
+/* Quản lý tuyển dụng */
+.campaign .icon {
+  color: #0ea5e9; /* xanh nhạt */
+}
+.jobPost .icon {
+  color: #4b5563; /* xám đậm */
+}
+.cvManagement .icon {
+  color: #14b8a6; /* teal */
+}
+.cvLabel .icon {
+  color: #7c3aed; /* tím đậm */
+}
+.cvRequest .icon {
+  color: #9333ea; /* tím */
+}
+.reports .icon {
+  color: #1d4ed8; /* xanh navy */
+}
+
+/* Hệ thống */
+.account .icon {
+  color: #6b7280; /* xám */
+}
+.notifications .icon {
+  color: #f43f5e; /* hồng đậm */
+}
+.mailbox .icon {
+  color: #3b82f6; /* xanh nhạt */
+}
+.history .icon {
+  color: #9ca3af; /* xám nhạt */
+}
+
+/* ====== Dark Mode ====== */
+:global(html.dark) .sidebar {
+  background-color: #1f2937;
+  border-right: 1px solid #374151;
+  color: #f9fafb;
+}
+
+:global(html.dark) .userSection {
+  border-bottom: 1px solid #374151;
+}
+
+:global(html.dark) .menuGroup {
+  color: #9ca3af;
+}
+
+:global(html.dark) .menuItem {
+  color: #d1d5db;
+}
+
+:global(html.dark) .menuItem:hover {
+  background-color: #374151;
+  color: #ffffff;
+}
+
+:global(html.dark) .bottomMenu {
+  border-top: 1px solid #374151;
+}
+
+:global(html.dark) .logout {
+  color: #f87171;
+}
+
+/* ===== Scrollbar ===== */
+.menuWrapper::-webkit-scrollbar {
+  width: 6px;
+}
+
+.menuWrapper::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.5);
+  border-radius: 3px;
+}
+
+.menuWrapper::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(156, 163, 175, 0.7);
+}
+
+.menuGroup {
+  margin-bottom: 12px;
+}
+
+.groupTitle {
+  font-size: 13px; /* chữ group label to hơn */
+  font-weight: 600;
+  color: #888;
+  margin: 8px 0 4px 12px;
+  text-transform: uppercase;
+}
