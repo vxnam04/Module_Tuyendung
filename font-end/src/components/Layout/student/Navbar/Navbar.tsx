@@ -12,10 +12,19 @@ import {
   LogOut,
 } from "lucide-react";
 import Image from "next/image";
+
+interface JobCategory {
+  id: string;
+  name: string;
+}
+
 export default function Navbar() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const [mounted, setMounted] = useState(false);
   const [openDropdown, setOpenDropdown] = useState(false);
+  const [jobCategories, setJobCategories] = useState<JobCategory[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Mount check
@@ -42,13 +51,39 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Fetch industries from backend Laravel
+  useEffect(() => {
+    async function fetchIndustries() {
+      try {
+        // URL backend, dùng biến môi trường NEXT_PUBLIC_API_URL
+        const baseUrl =
+          process.env.NEXT_PUBLIC_API_URL || "http://localhost:8020";
+
+        const res = await fetch(`${baseUrl}/api/job-industries`);
+        if (!res.ok) throw new Error("Failed to fetch industries");
+
+        const data: { industry_name: string }[] = await res.json();
+        const categories = data.map((item) => ({
+          id: item.industry_name,
+          name: item.industry_name,
+        }));
+        setJobCategories(categories);
+      } catch (err) {
+        console.error(err);
+        setError("Không thể tải danh mục ngành nghề");
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchIndustries();
+  }, []);
+
   return (
     <header className={styles.header}>
       <nav className={styles.navbar}>
         {/* Logo */}
         <div className={styles.logo}>
           TopCV
-          {/* Menu */}
           <ul className={styles.menu}>
             <li className={styles.dropdown}>
               <a href="#">
@@ -76,56 +111,32 @@ export default function Navbar() {
                 </div>
 
                 <div className={styles.megaColumn}>
-                  <h3>VIỆC LÀM THEO VỊ TRÍ</h3>
+                  <h3>VIỆC LÀM THEO NGÀNH NGHỀ</h3>
                   <ul className={styles.gridMenu}>
-                    <li>
-                      <a href="#">Nhân viên kinh doanh</a>
-                    </li>
-                    <li>
-                      <a href="#">Kế toán</a>
-                    </li>
-                    <li>
-                      <a href="#">Marketing</a>
-                    </li>
-                    <li>
-                      <a href="#">Hành chính nhân sự</a>
-                    </li>
-                    <li>
-                      <a href="#">Chăm sóc khách hàng</a>
-                    </li>
-                    <li>
-                      <a href="#">Ngân hàng</a>
-                    </li>
-                    <li>
-                      <a href="#">IT</a>
-                    </li>
-                    <li>
-                      <a href="#">Lao động phổ thông</a>
-                    </li>
-                    <li>
-                      <a href="#">Senior</a>
-                    </li>
-                    <li>
-                      <a href="#">Kỹ sư xây dựng</a>
-                    </li>
-                    <li>
-                      <a href="#">Thiết kế đồ họa</a>
-                    </li>
-                    <li>
-                      <a href="#">Bất động sản</a>
-                    </li>
-                    <li>
-                      <a href="#">Giáo dục</a>
-                    </li>
-                    <li>
-                      <a href="#">Telesales</a>
-                    </li>
+                    {loading ? (
+                      <li>Loading...</li>
+                    ) : error ? (
+                      <li>{error}</li>
+                    ) : (
+                      jobCategories.map((cat) => (
+                        <li key={cat.id}>
+                          <a
+                            href={`/jobs?category=${encodeURIComponent(
+                              cat.id
+                            )}`}
+                          >
+                            {cat.name}
+                          </a>
+                        </li>
+                      ))
+                    )}
                   </ul>
                 </div>
               </div>
             </li>
           </ul>
         </div>
+
         {/* Actions */}
         <div className={styles.actions}>
           {/* Theme toggle */}
@@ -153,8 +164,8 @@ export default function Navbar() {
             <Image
               src="https://i.pravatar.cc/40"
               alt="avatar"
-              width={32} // bắt buộc
-              height={32} // bắt buộc
+              width={32}
+              height={32}
               className={styles.avatar}
               onClick={() => setOpenDropdown(!openDropdown)}
             />

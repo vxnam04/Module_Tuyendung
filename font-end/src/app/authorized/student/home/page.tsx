@@ -4,11 +4,29 @@ import { useState, useEffect } from "react";
 import StudentLayout from "../page";
 import styles from "./home.module.css";
 import Image from "next/image";
-import { Search, List, MapPin, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Search,
+  MapPin,
+  ChevronLeft,
+  ChevronRight,
+  ChevronDown,
+} from "lucide-react";
+
+interface JobCategory {
+  id: string;
+  name: string;
+}
 
 export default function HomePage() {
   const [data, setData] = useState("");
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [jobCategories, setJobCategories] = useState<JobCategory[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // state cho phân trang danh mục
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6;
 
   // Danh sách ảnh cho slide
   const slides = [
@@ -17,7 +35,7 @@ export default function HomePage() {
     "/images/chuydoiso.jpg",
   ];
 
-  // Fetch dữ liệu từ backend
+  // Fetch dữ liệu từ backend test
   useEffect(() => {
     fetch("http://localhost:8020/api/ping")
       .then((res) => res.json())
@@ -25,21 +43,61 @@ export default function HomePage() {
       .catch((err) => setData("Lỗi kết nối: " + err.message));
   }, []);
 
-  // Tự động chuyển ảnh
+  // Tự động chuyển ảnh slide
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % slides.length);
-    }, 3000000);
+    }, 300000);
     return () => clearInterval(interval);
   }, [slides.length]);
 
-  // Xử lý khi click mũi tên
+  // Xử lý khi click mũi tên slide
   const prevSlide = () => {
     setCurrentIndex((prev) => (prev - 1 + slides.length) % slides.length);
   };
 
   const nextSlide = () => {
     setCurrentIndex((prev) => (prev + 1) % slides.length);
+  };
+
+  // Fetch industries từ backend Laravel
+  useEffect(() => {
+    async function fetchIndustries() {
+      try {
+        const baseUrl =
+          process.env.NEXT_PUBLIC_API_URL || "http://localhost:8020";
+
+        const res = await fetch(`${baseUrl}/api/job-industries`);
+        if (!res.ok) throw new Error("Failed to fetch industries");
+
+        const data: { industry_name: string }[] = await res.json();
+        const categories = data.map((item) => ({
+          id: item.industry_name,
+          name: item.industry_name,
+        }));
+        setJobCategories(categories);
+      } catch (err) {
+        console.error(err);
+        setError("Không thể tải danh mục ngành nghề");
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchIndustries();
+  }, []);
+
+  // phân trang danh mục
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = jobCategories.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(jobCategories.length / itemsPerPage);
+
+  const handlePrevPage = () => {
+    setCurrentPage((prev) => (prev > 1 ? prev - 1 : prev));
+  };
+
+  const handleNextPage = () => {
+    setCurrentPage((prev) => (prev < totalPages ? prev + 1 : prev));
   };
 
   return (
@@ -60,24 +118,67 @@ export default function HomePage() {
 
           {/* Input Search Box */}
           <div className={styles.searchBox}>
-            <button className={styles.categoryBtn}>
+            {/* <button className={styles.categoryBtn}>
               <List size={18} />
               <span>Danh mục Nghề</span>
-            </button>
+            </button> */}
             <input
               type="text"
               placeholder="Vị trí tuyển dụng, tên công ty"
               className={styles.inputField}
             />
             <button className={styles.locationBtn}>
-              <MapPin size={18} />
-              <span>Địa điểm</span>
-              <span className={styles.dropdown}>▼</span>
+              <span className={styles.display}>
+                <MapPin size={18} className={styles.itemlocation} />
+                <span>Địa điểm</span>
+              </span>
+              <span className={styles.dropdown}>
+                <ChevronDown size={16} className={styles.itemArrow} />
+              </span>
             </button>
             <button className={styles.searchBtn}>
               <Search size={18} />
               <span>Tìm kiếm</span>
             </button>
+          </div>
+
+          {/* Danh mục ngành nghề */}
+          <div className={styles.megaColumn}>
+            <h3>VIỆC LÀM THEO NGÀNH NGHỀ</h3>
+            <ul className={styles.gridMenu}>
+              {loading ? (
+                <li>Loading...</li>
+              ) : error ? (
+                <li>{error}</li>
+              ) : (
+                currentItems.map((cat) => (
+                  <li key={cat.id} className={styles.listItem}>
+                    <a href={`/jobs?category=${encodeURIComponent(cat.id)}`}>
+                      <span>{cat.name}</span>
+                      <ChevronRight size={16} className={styles.itemArrow} />
+                    </a>
+                  </li>
+                ))
+              )}
+            </ul>
+
+            {/* Phân trang */}
+            {!loading && !error && (
+              <div className={styles.pagination}>
+                <button onClick={handlePrevPage} disabled={currentPage === 1}>
+                  &lt;
+                </button>
+                <span>
+                  {currentPage}/{totalPages}
+                </span>
+                <button
+                  onClick={handleNextPage}
+                  disabled={currentPage === totalPages}
+                >
+                  &gt;
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Box nhỏ chứa slide ảnh */}

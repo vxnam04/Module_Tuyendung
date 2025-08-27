@@ -3,15 +3,18 @@
   margin: 0 auto;
   font-size: 14px;
 }
+
+/* Banner */
 .banner1 {
   position: relative;
   width: 100%;
   height: 500px; /* chiều cao banner */
 }
 
+/* Search Box */
 .searchBox {
   position: absolute;
-  top: 30%;
+  top: 20%;
   left: 50%;
   transform: translate(-50%, -50%);
   display: flex;
@@ -25,7 +28,6 @@
   padding: 5px 10px;
 }
 
-/* Danh mục nghề */
 .categoryBtn {
   display: flex;
   align-items: center;
@@ -39,7 +41,6 @@
   margin-left: 8px;
 }
 
-/* Input chính */
 .inputField {
   flex: 2;
   border: none;
@@ -48,13 +49,13 @@
   font-size: 15px;
   color: #333;
   margin-left: 15px;
-  border-left: 1px solid #e5e7eb; /* vạch ngăn cách bên trái */
+  border-left: 1px solid #e5e7eb;
 }
 
-/* Địa điểm */
 .locationBtn {
   display: flex;
   min-width: 200px;
+  justify-content: space-between;
   align-items: center;
   gap: 6px;
   padding: 10px 14px;
@@ -62,10 +63,11 @@
   background: transparent;
   color: #111827;
   cursor: pointer;
-  border-left: 1px solid #e5e7eb; /* vạch ngăn cách */
+  border-left: 1px solid #e5e7eb;
+  border-right: 1px solid #e5e7eb;
+  margin-right: 15px;
 }
 
-/* Nút tìm kiếm */
 .searchBtn {
   display: flex;
   align-items: center;
@@ -83,12 +85,13 @@
 .searchBtn:hover {
   background: #009740;
 }
+
 /* Box slide nhỏ */
 .slideBox {
   position: absolute;
-  bottom: 10px;
+  bottom: 30px;
   right: 240px;
-  width: 600px;
+  width: 700px;
   height: 300px;
   overflow: hidden;
   border-radius: 12px;
@@ -100,7 +103,7 @@
   object-fit: cover;
 }
 
-/* Nút mũi tên */
+/* Nút mũi tên slide */
 .arrowBtn {
   position: absolute;
   top: 50%;
@@ -112,7 +115,7 @@
   border-radius: 50%;
   cursor: pointer;
   z-index: 3;
-  transition: background 30s;
+  transition: background 0.3s;
 }
 
 .arrowBtn:hover {
@@ -125,4 +128,113 @@
 
 .right {
   right: 10px;
+}
+
+/* Mega Column (việc làm theo ngành nghề) */
+.megaColumn {
+  position: absolute;
+  z-index: 5;
+  background: #fff;
+  padding: 20px;
+  width: 350px;
+  bottom: 30px;
+  left: 220px;
+  height: 300px;
+  border-radius: 12px;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+}
+
+.megaColumn h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: #111827;
+}
+
+/* Grid menu ngành nghề */
+.gridMenu {
+  flex: 1;
+  overflow: hidden;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.listItem:last-child {
+  border-bottom: none;
+}
+
+.listItem a {
+  text-decoration: none;
+  color: #374151;
+  font-size: 14px;
+  display: block;
+  padding: 8px 4px;
+  transition: color 0.2s;
+}
+
+.listItem a:hover {
+  color: #16a34a;
+}
+
+/* Pagination */
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: flex-end; /* đẩy nút qua phải */
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 13px;
+  color: #374151;
+  border-top: 1px solid #e0e0e0;
+  width: 100%; /* full chiều ngang */
+  padding-top: 6px; /* cách border một chút cho đẹp */
+}
+
+.pagination button {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 14px;
+  color: #374151;
+}
+
+.pagination button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+.listItem a {
+  text-decoration: none;
+  color: #374151;
+  font-size: 14px;
+  display: flex; /* đổi thành flex để căn 2 bên */
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 4px;
+  transition: color 0.2s;
+}
+
+.listItem a:hover {
+  color: #16a34a;
+}
+
+.itemArrow {
+  color: #9ca3af; /* xám nhạt */
+  transition: transform 0.2s ease;
+}
+
+.listItem a:hover .itemArrow {
+  transform: translateX(2px); /* mũi tên dịch sang phải khi hover */
+  color: #16a34a;
+}
+.display {
+  display: flex;
+  justify-content: space-between;
+}
+.itemlocation {
+  margin-right: 10px;
+  margin-top: 2px;
 }
