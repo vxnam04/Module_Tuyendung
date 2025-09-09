@@ -1,0 +1,187 @@
+/* Sidebar cơ bản */
+.sidebar {
+  width: 230px;
+  height: 100vh; /* full chiều cao màn hình */
+  background-color: #ffffff;
+  border-right: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  transition: width 0.3s;
+  overflow: hidden;
+}
+
+/* Khi collapsed */
+.sidebar.collapsed {
+  width: 60px;
+}
+
+/* User section */
+.userSection {
+  display: flex;
+  align-items: center;
+  justify-content: center; /* căn giữa avatar + username */
+  gap: 8px;
+  height: 57.5px;
+  padding: 0 12px; /* padding trái/phải */
+  border-bottom: 1px solid #e5e7eb;
+  flex-shrink: 0;
+  width: 100%;
+  box-sizing: border-box;
+  transition: justify-content 0.3s;
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  background-color: #9ca3af;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-weight: bold;
+  font-size: 14px;
+  flex-shrink: 0;
+  transition: all 0.3s;
+}
+
+.username {
+  transition: opacity 0.3s, transform 0.3s;
+}
+
+/* Khi collapsed: chỉ căn giữa avatar, ẩn username */
+.sidebar.collapsed .userSection {
+  justify-content: center;
+}
+
+.sidebar.collapsed .username {
+  opacity: 0;
+  transform: translateX(30px);
+}
+
+.sidebar.collapsed .avatar {
+  transform: translateX(50);
+}
+
+/* Menu scrollable */
+.menuWrapper {
+  flex: 1; /* chiếm hết không gian giữa userSection và bottomMenu */
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: 8px 0;
+  padding-left: 20px;
+}
+
+.menuGroup {
+  font-size: 12px;
+  font-weight: 600;
+  color: #9ca3af;
+  margin: 16px 0 4px 16px;
+  transition: opacity 0.3s, transform 0.3s;
+}
+
+.sidebar.collapsed .menuGroup {
+  opacity: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  font-size: 14px;
+  color: #374151;
+  cursor: pointer;
+  border-radius: 6px;
+  white-space: nowrap;
+  transition: background-color 0.3s, color 0.3s, justify-content 0.3s;
+}
+
+.menuItem:hover {
+  background-color: #f3f4f6;
+}
+
+.menuItem span {
+  transition: opacity 0.3s, width 0.3s;
+}
+
+.menuItem .icon {
+  flex-shrink: 0;
+}
+
+/* Khi collapsed: ẩn chữ, icon căn giữa */
+.sidebar.collapsed .menuItem {
+  justify-content: center;
+  margin-left: 0;
+}
+
+.sidebar.collapsed .menuItem span {
+  opacity: 0;
+  width: 0;
+  overflow: hidden;
+}
+
+/* Bottom menu cố định */
+.bottomMenu {
+  flex-shrink: 0; /* không bị co lại */
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 0;
+  border-top: 1px solid #e5e7eb;
+  padding-left: 20px;
+}
+
+/* Logout */
+.logout {
+  color: #ef4444;
+}
+
+/* ===== Dark Mode ===== */
+:global(html.dark) .sidebar {
+  background-color: #1f2937; /* gray-800 */
+  border-right: 1px solid #374151;
+  color: #f9fafb;
+}
+
+:global(html.dark) .userSection {
+  border-bottom: 1px solid #374151;
+}
+
+:global(html.dark) .menuGroup {
+  color: #9ca3af;
+}
+
+:global(html.dark) .menuItem {
+  color: #d1d5db;
+}
+
+:global(html.dark) .menuItem:hover {
+  background-color: #374151;
+  color: #ffffff;
+}
+
+:global(html.dark) .bottomMenu {
+  border-top: 1px solid #374151;
+}
+
+:global(html.dark) .logout {
+  color: #f87171;
+}
+
+/* Scrollbar tùy chọn cho menu */
+.menuWrapper::-webkit-scrollbar {
+  width: 6px;
+}
+
+.menuWrapper::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.5);
+  border-radius: 3px;
+}
+
+.menuWrapper::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(156, 163, 175, 0.7);
+}

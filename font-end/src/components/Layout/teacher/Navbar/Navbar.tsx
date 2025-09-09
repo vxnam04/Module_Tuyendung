@@ -9,12 +9,14 @@ import {
   LifeBuoy,
   FileText,
   Users,
-  Link,
-} from "lucide-react"; // 👈 thêm icon
+  Link as LinkIcon,
+} from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useState, useRef } from "react";
 import styles from "./Navbar.module.css";
 import Image from "next/image";
+import Link from "next/link"; // 👈 import Link từ next/link
+
 interface NavbarProps {
   collapsed: boolean;
   setCollapsed: (val: boolean) => void;
@@ -28,7 +30,6 @@ export default function Navbar({ collapsed, setCollapsed }: NavbarProps) {
 
   useEffect(() => setMounted(true), []);
 
-  // Đóng dropdown khi click ra ngoài
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (
@@ -57,16 +58,16 @@ export default function Navbar({ collapsed, setCollapsed }: NavbarProps) {
       <div className={styles.actions}>
         {/* Menu */}
         <nav className={styles.nav}>
-          <a href="#" className={styles.navItem}>
+          <Link href="/authorized/teacher/post" className={styles.navItem}>
             <FileText size={16} className={styles.navIcon} />
             Đăng tin
-          </a>
+          </Link>
           <a href="#" className={styles.navItem}>
             <Users size={16} className={styles.navIcon} />
             Tìm CV
           </a>
           <a href="#" className={styles.navItem}>
-            <Link size={16} className={styles.navIcon} />
+            <LinkIcon size={16} className={styles.navIcon} />
             Connect
           </a>
         </nav>
@@ -100,8 +101,8 @@ export default function Navbar({ collapsed, setCollapsed }: NavbarProps) {
             alt="avatar"
             className={styles.avatar}
             onClick={() => setOpenDropdown(!openDropdown)}
-            width={32} // bắt buộc
-            height={32} // bắt buộc
+            width={32}
+            height={32}
           />
           {openDropdown && (
             <div className={styles.dropdown}>

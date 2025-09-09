@@ -17,6 +17,7 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ collapsed }: SidebarProps) {
+  console.log("123132" + localStorage.getItem("token"));
   return (
     <aside className={`${styles.sidebar} ${collapsed ? styles.collapsed : ""}`}>
       {/* User section */}

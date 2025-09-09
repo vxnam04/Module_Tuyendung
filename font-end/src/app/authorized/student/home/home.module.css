@@ -8,7 +8,7 @@
 .banner1 {
   position: relative;
   width: 100%;
-  height: 500px; /* chiều cao banner */
+  height: 500px;
 }
 
 /* Search Box */
@@ -21,24 +21,12 @@
   align-items: center;
   background: #fff;
   border-radius: 50px;
-  overflow: hidden;
+  overflow: visible; /* QUAN TRỌNG: cho phép dropdown tràn ra ngoài */
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
   width: 70%;
   max-width: 1100px;
   padding: 5px 10px;
-}
-
-.categoryBtn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
-  border: 0.5px solid #92b5a2;
-  border-radius: 50px;
-  background: #fff;
-  font-weight: 600;
-  cursor: pointer;
-  margin-left: 8px;
+  z-index: 10; /* cao hơn slide */
 }
 
 .inputField {
@@ -81,56 +69,121 @@
   border-radius: 50px;
   transition: background 0.2s ease;
 }
-
 .searchBtn:hover {
   background: #009740;
 }
 
-/* Box slide nhỏ */
-.slideBox {
+/* Box địa điểm dropdown */
+/* Box địa điểm dropdown - phiên bản ngang */
+.locationBox {
   position: absolute;
-  bottom: 30px;
-  right: 240px;
-  width: 700px;
-  height: 300px;
-  overflow: hidden;
-  border-radius: 12px;
-  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2);
-  z-index: 2;
+  top: 100%;
+  right: 147px;
+  width: 500px; /* rộng hơn để 2 cột vừa */
+  height: 350px;
+  display: flex;
+  flex-direction: column; /* column tổng thể để footer nằm dưới */
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  z-index: 20;
+  overflow: hidden; /* ẩn scroll chung, mỗi cột scroll riêng */
 }
-
-.slideImage {
-  object-fit: cover;
-}
-
-/* Nút mũi tên slide */
-.arrowBtn {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  background: rgba(0, 0, 0, 0.4);
-  border: none;
-  color: white;
-  padding: 8px;
-  border-radius: 50%;
+.squareRadio {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #555;
+  border-radius: 3px;
   cursor: pointer;
-  z-index: 3;
-  transition: background 0.3s;
+  position: relative;
+  vertical-align: middle;
+  margin-right: 6px;
+  transform: translateY(-2px);
 }
 
-.arrowBtn:hover {
-  background: rgba(0, 0, 0, 0.7);
+.squareRadio:checked {
+  background-color: #007bff;
+  border-color: #007bff;
 }
 
-.left {
-  left: 10px;
+.squareRadio:checked::after {
+  content: "✔";
+  position: absolute;
+  top: -2px;
+  left: 2px;
+  font-size: 12px;
+  color: white;
 }
 
-.right {
-  right: 10px;
+/* Phần nội dung - 2 cột ngang */
+.locationBox .box {
+  display: flex;
+  flex: 1; /* chiếm hết chiều cao trừ footer */
+  gap: 8px;
+  padding: 8px 12px;
+  overflow: hidden;
 }
 
-/* Mega Column (việc làm theo ngành nghề) */
+.column {
+  flex: 1;
+  overflow-y: auto; /* scroll riêng từng cột nếu danh sách dài */
+  padding: 0 8px;
+}
+
+.column h4 {
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: bold;
+  color: #333;
+}
+
+/* Footer cố định dưới */
+.footer {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: #f9f9f9;
+  border-top: 1px solid #ddd;
+}
+
+.applyBtn {
+  background: #00b14f;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+}
+
+.locationBox ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.locationBox li {
+  padding: 6px;
+  cursor: pointer;
+}
+.locationBox li:hover {
+  background: #f5f5f5;
+}
+
+.display {
+  display: flex;
+  justify-content: space-between;
+}
+.itemlocation {
+  margin-right: 10px;
+  margin-top: 2px;
+}
+
+/* Mega Column */
 .megaColumn {
   position: absolute;
   z-index: 5;
@@ -145,7 +198,6 @@
   display: flex;
   flex-direction: column;
 }
-
 .megaColumn h3 {
   font-size: 16px;
   font-weight: 600;
@@ -153,7 +205,7 @@
   color: #111827;
 }
 
-/* Grid menu ngành nghề */
+/* Grid menu */
 .gridMenu {
   flex: 1;
   overflow: hidden;
@@ -161,39 +213,41 @@
   padding: 0;
   margin: 0;
 }
-
-.listItem:last-child {
-  border-bottom: none;
-}
-
 .listItem a {
   text-decoration: none;
   color: #374151;
   font-size: 14px;
-  display: block;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   padding: 8px 4px;
   transition: color 0.2s;
 }
-
 .listItem a:hover {
+  color: #16a34a;
+}
+.itemArrow {
+  color: #9ca3af;
+  transition: transform 0.2s ease;
+}
+.listItem a:hover .itemArrow {
+  transform: translateX(2px);
   color: #16a34a;
 }
 
 /* Pagination */
-/* Pagination */
 .pagination {
   display: flex;
-  justify-content: flex-end; /* đẩy nút qua phải */
+  justify-content: flex-end;
   align-items: center;
   gap: 8px;
   margin-top: 8px;
   font-size: 13px;
   color: #374151;
   border-top: 1px solid #e0e0e0;
-  width: 100%; /* full chiều ngang */
-  padding-top: 6px; /* cách border một chút cho đẹp */
+  width: 100%;
+  padding-top: 6px;
 }
-
 .pagination button {
   border: none;
   background: transparent;
@@ -201,40 +255,47 @@
   font-size: 14px;
   color: #374151;
 }
-
 .pagination button:disabled {
   opacity: 0.3;
   cursor: not-allowed;
 }
-.listItem a {
-  text-decoration: none;
-  color: #374151;
-  font-size: 14px;
-  display: flex; /* đổi thành flex để căn 2 bên */
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 4px;
-  transition: color 0.2s;
-}
 
-.listItem a:hover {
-  color: #16a34a;
+/* Slide */
+.slideBox {
+  position: absolute;
+  bottom: 30px;
+  right: 240px;
+  width: 700px;
+  height: 300px;
+  overflow: hidden;
+  border-radius: 12px;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2);
+  z-index: 2;
 }
-
-.itemArrow {
-  color: #9ca3af; /* xám nhạt */
-  transition: transform 0.2s ease;
+.slideImage {
+  object-fit: cover;
 }
-
-.listItem a:hover .itemArrow {
-  transform: translateX(2px); /* mũi tên dịch sang phải khi hover */
-  color: #16a34a;
+.arrowBtn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.4);
+  border: none;
+  color: white;
+  width: 30px;
+  height: 60px;
+  cursor: pointer;
+  z-index: 3;
+  transition: background 0.3s;
 }
-.display {
-  display: flex;
-  justify-content: space-between;
+.arrowBtn.left {
+  left: -2px;
+  border-radius: 0 50px 50px 0;
 }
-.itemlocation {
-  margin-right: 10px;
-  margin-top: 2px;
+.arrowBtn.right {
+  right: -2px;
+  border-radius: 50px 0 0 50px;
+}
+.arrowBtn:hover {
+  background: rgba(0, 0, 0, 0.7);
 }
