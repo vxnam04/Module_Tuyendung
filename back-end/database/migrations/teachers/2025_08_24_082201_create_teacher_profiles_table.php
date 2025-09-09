@@ -14,12 +14,14 @@ return new class extends Migration
     public function up()
     {
         Schema::create('teacher_profiles', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('teacher_id')->constrained('teachers')->onDelete('cascade');
-            $table->string('specialization')->nullable();
-            $table->integer('experience_years')->nullable();
-            $table->text('bio')->nullable();
-            $table->timestamps();
+            $table->id(); // Khóa chính (id tự tăng)
+            $table->foreignId('teacher_id') // Khóa ngoại tham chiếu sang bảng teachers
+                ->constrained('teachers')
+                ->onDelete('cascade'); // Nếu teacher bị xóa thì profile cũng bị xóa theo
+            $table->string('specialization')->nullable(); // Chuyên ngành (có thể null)
+            $table->integer('experience_years')->nullable(); // Số năm kinh nghiệm (có thể null)
+            $table->text('bio')->nullable(); // Tiểu sử / mô tả giáo viên (có thể null)
+            $table->timestamps(); // created_at và updated_at
         });
     }
 
@@ -30,6 +32,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('teacher_profiles');
+        Schema::dropIfExists('teacher_profiles'); // Xóa bảng nếu rollback
     }
 };

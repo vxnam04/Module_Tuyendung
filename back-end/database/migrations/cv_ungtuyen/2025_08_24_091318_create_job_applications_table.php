@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
+        // Như vậy: giáo viên không cần quan hệ trực tiếp với job_applications, vì thông qua job_posts đã quản lý được toàn bộ CV apply.
         Schema::create('job_applications', function (Blueprint $table) {
             $table->id();
             $table->foreignId('job_post_id')->constrained('job_posts')->onDelete('cascade');

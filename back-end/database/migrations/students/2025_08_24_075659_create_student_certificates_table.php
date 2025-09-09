@@ -13,6 +13,7 @@ return new class extends Migration
      */
     public function up()
     {
+        // Bảng chứng chỉ 
         Schema::create('student_certificates', function (Blueprint $table) {
             $table->id();
             $table->foreignId('student_id')->constrained('students')->onDelete('cascade');

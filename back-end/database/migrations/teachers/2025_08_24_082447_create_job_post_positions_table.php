@@ -13,6 +13,7 @@ return new class extends Migration
      */
     public function up()
     {
+        // Bảng chức vụ 
         Schema::create('job_post_positions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('job_post_id')->constrained('job_posts')->onDelete('cascade');

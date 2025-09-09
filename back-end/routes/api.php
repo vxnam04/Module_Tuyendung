@@ -15,24 +15,37 @@ use App\Http\Controllers\DeviceController;
 */
 
 
-// ===== ROUTES YÊU CẦU ĐĂNG NHẬP (JWT) =====
-Route::middleware(['jwt.auth'])->group(function () {
+// // ===== ROUTES YÊU CẦU ĐĂNG NHẬP (JWT) =====
+// Route::middleware(['jwt.auth'])->group(function () {
 
-    // Lấy thông tin user hiện tại
-    Route::get('/me', [AuthController::class, 'me']);
+//     // Lấy thông tin user hiện tại
+//     Route::get('/me', [AuthController::class, 'me']);
 
-    // Đăng xuất
-    Route::post('/logout', [AuthController::class, 'logout']);
+//     // Đăng xuất
+//     Route::post('/logout', [AuthController::class, 'logout']);
 
-    // DEVICE ROUTES
-    Route::prefix('device')->group(function () {
-        Route::post('/register', [DeviceController::class, 'register']); // Thêm thiết bị mới
-        Route::get('/list', [DeviceController::class, 'list']);           // Danh sách thiết bị
-        Route::get('/{device_id}', [DeviceController::class, 'show']);    // Xem chi tiết thiết bị
-    });
-});
+//     // DEVICE ROUTES
+//     Route::prefix('device')->group(function () {
+//         Route::post('/register', [DeviceController::class, 'register']); // Thêm thiết bị mới
+//         Route::get('/list', [DeviceController::class, 'list']);           // Danh sách thiết bị
+//         Route::get('/{device_id}', [DeviceController::class, 'show']);    // Xem chi tiết thiết bị
+//     });
+// });
 
 // routes/api.php
 Route::get('/ping', function () {
     return response()->json(['message' => 'Laravel OK']);
 });
+
+use App\Http\Controllers\Api\JobPostIndustryController;
+use App\Http\Controllers\Api\JobPostAddressController;
+
+Route::get('/job-industries', [JobPostIndustryController::class, 'index']);
+Route::get('/locations', [JobPostAddressController::class, 'index']);
+
+use App\Http\Controllers\JobPostController;
+
+Route::get('/job-posts', [JobPostController::class, 'index']);
+Route::get('/job-posts/{id}', [JobPostController::class, 'show']);
+Route::post('/job-posts', [JobPostController::class, 'store'])
+    ->middleware('checkUser:lecturer');
