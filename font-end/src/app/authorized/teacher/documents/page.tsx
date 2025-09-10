@@ -2,14 +2,14 @@
 
 import { useState, useEffect } from "react";
 import TeacherLayout from "../page";
+import { fetchWithAuth } from "@/src/lib/fetchWithAuth";
 
 export default function UsersPage() {
-  const [data, setData] = useState("");
+  const [data, setData] = useState<string>("Đang tải...");
 
   useEffect(() => {
-    fetch("http://localhost:8020/api/ping")
-      .then((res) => res.json())
-      .then((data) => setData(data.message))
+    fetchWithAuth("http://localhost:8020/api/ping")
+      .then((res) => setData(res.message)) // không cần res.json()
       .catch((err) => setData("Lỗi kết nối: " + err.message));
   }, []);
 

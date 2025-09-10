@@ -18,13 +18,11 @@ interface JobCategory {
   name: string;
 }
 
-// Backend trả về mỗi item 1 city
 interface RawLocation {
   state: string;
   city: string;
 }
 
-// Mảng đã gom cities
 interface Location {
   state: string;
   cities: string[];
@@ -32,12 +30,18 @@ interface Location {
 
 export default function HomePage() {
   // Backend ping
-  const [data, setData] = useState("");
+  const [data, setData] = useState<string>("");
   useEffect(() => {
-    fetch("http://localhost:8020/api/ping")
+    const token = localStorage.getItem("token");
+    fetch("http://localhost:8020/api/ping", {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
       .then((res) => res.json())
       .then((data) => setData(data.message))
-      .catch((err) => setData("Lỗi kết nối: " + err.message));
+      .catch((err: unknown) => {
+        if (err instanceof Error) setData("Lỗi kết nối: " + err.message);
+        else setData("Lỗi kết nối không xác định");
+      });
   }, []);
 
   // Slide
@@ -70,23 +74,34 @@ export default function HomePage() {
   useEffect(() => {
     async function fetchIndustries() {
       try {
+        setLoading(true);
+        const token = localStorage.getItem("token");
         const baseUrl =
           process.env.NEXT_PUBLIC_API_URL || "http://localhost:8020";
-        const res = await fetch(`${baseUrl}/api/job-industries`);
-        if (!res.ok) throw new Error("Failed to fetch industries");
+        const res = await fetch(`${baseUrl}/api/job-industries`, {
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        });
+
+        if (!res.ok) throw new Error("Không thể tải danh mục ngành nghề");
         const data: { industry_name: string }[] = await res.json();
-        const categories = data.map((item) => ({
-          id: item.industry_name,
-          name: item.industry_name,
-        }));
-        setJobCategories(categories);
-      } catch (err) {
-        console.error(err);
-        setError("Không thể tải danh mục ngành nghề");
+        setJobCategories(
+          data.map((item) => ({
+            id: item.industry_name,
+            name: item.industry_name,
+          }))
+        );
+        setError(null);
+      } catch (err: unknown) {
+        if (err instanceof Error) setError(err.message);
+        else setError("Lỗi khi tải danh mục ngành nghề");
       } finally {
         setLoading(false);
       }
     }
+
     fetchIndustries();
   }, []);
 
@@ -110,27 +125,35 @@ export default function HomePage() {
   const fetchLocations = async () => {
     try {
       setLoadingLocations(true);
+      const token = localStorage.getItem("token");
       const baseUrl =
         process.env.NEXT_PUBLIC_API_URL || "http://localhost:8020";
-      const res = await fetch(`${baseUrl}/api/locations`);
+      const res = await fetch(`${baseUrl}/api/locations`, {
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+
       if (!res.ok) throw new Error("Failed to fetch locations");
       const data: RawLocation[] = await res.json();
 
-      // Gom cities theo state, loại trùng
+      // Gom cities theo state
       const grouped: Location[] = [];
       data.forEach((item) => {
         const stateObj = grouped.find((s) => s.state === item.state);
         if (stateObj) {
-          if (!stateObj.cities.includes(item.city)) {
+          if (!stateObj.cities.includes(item.city))
             stateObj.cities.push(item.city);
-          }
         } else {
           grouped.push({ state: item.state, cities: [item.city] });
         }
       });
       setLocations(grouped);
-    } catch (err) {
-      console.error("Fetch locations error:", err);
+    } catch (err: unknown) {
+      if (err instanceof Error)
+        console.error("Fetch locations error:", err.message);
+      else console.error("Fetch locations error:", err);
     } finally {
       setLoadingLocations(false);
     }
@@ -146,11 +169,8 @@ export default function HomePage() {
     if (!selectedState) return;
     const allCities =
       locations.find((s) => s.state === selectedState)?.cities || [];
-    if (selectedCities.length === allCities.length) {
-      setSelectedCities([]);
-    } else {
-      setSelectedCities(allCities);
-    }
+    if (selectedCities.length === allCities.length) setSelectedCities([]);
+    else setSelectedCities(allCities);
   };
 
   const allCities = selectedState
@@ -217,7 +237,6 @@ export default function HomePage() {
                                 }}
                                 className={styles.squareRadio}
                               />
-
                               {loc.state}
                             </label>
                           </li>
@@ -349,9 +368,8 @@ export default function HomePage() {
             </button>
           </div>
         </div>
-        <div>
-          <JobList />
-        </div>
+
+        <JobList />
 
         <div>Backend trả về: {data}</div>
       </StudentLayout>

@@ -26,13 +26,13 @@ export default function Navbar() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  // const token = localStorage.getItem("token")?.trim();
+  // console.log(token);
 
   // Mount check
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  useEffect(() => setMounted(true), []);
 
-  // Apply theme to body
+  // Apply theme
   useEffect(() => {
     document.body.setAttribute("data-theme", theme);
   }, [theme]);
@@ -51,15 +51,33 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Fetch industries from backend Laravel
+  // Fetch industries only if token exists
   useEffect(() => {
-    async function fetchIndustries() {
+    const token = localStorage.getItem("token")?.trim();
+    if (!token) {
+      setError("Chưa đăng nhập");
+      setLoading(false);
+      return;
+    }
+
+    const fetchIndustries = async () => {
+      setLoading(true);
       try {
-        // URL backend, dùng biến môi trường NEXT_PUBLIC_API_URL
         const baseUrl =
           process.env.NEXT_PUBLIC_API_URL || "http://localhost:8020";
+        const res = await fetch(`${baseUrl}/api/job-industries`, {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
-        const res = await fetch(`${baseUrl}/api/job-industries`);
+        if (res.status === 401) {
+          setError("Token hết hạn hoặc chưa đăng nhập");
+          setJobCategories([]);
+          return;
+        }
+
         if (!res.ok) throw new Error("Failed to fetch industries");
 
         const data: { industry_name: string }[] = await res.json();
@@ -68,20 +86,23 @@ export default function Navbar() {
           name: item.industry_name,
         }));
         setJobCategories(categories);
+        setError(null);
       } catch (err) {
         console.error(err);
         setError("Không thể tải danh mục ngành nghề");
+        setJobCategories([]);
       } finally {
         setLoading(false);
       }
-    }
+    };
+
     fetchIndustries();
   }, []);
 
   return (
     <header className={styles.header}>
       <nav className={styles.navbar}>
-        {/* Logo */}
+        {/* Logo & Menu */}
         <div className={styles.logo}>
           TopCV
           <ul className={styles.menu}>
@@ -89,7 +110,6 @@ export default function Navbar() {
               <a href="#">
                 Việc làm <ChevronDown size={14} />
               </a>
-
               {/* Mega Menu */}
               <div className={styles.megaMenu}>
                 <div className={styles.megaColumn}>
@@ -109,7 +129,6 @@ export default function Navbar() {
                     </li>
                   </ul>
                 </div>
-
                 <div className={styles.megaColumn}>
                   <h3>VIỆC LÀM THEO NGÀNH NGHỀ</h3>
                   <ul className={styles.gridMenu}>
@@ -155,11 +174,11 @@ export default function Navbar() {
               />
             ))}
 
-          {/* Notification + Chat */}
+          {/* Notifications */}
           <Bell size={18} className={styles.icon} />
           <MessageCircle size={18} className={styles.icon} />
 
-          {/* Avatar + Dropdown */}
+          {/* Avatar Dropdown */}
           <div className={styles.avatarWrapper} ref={dropdownRef}>
             <Image
               src="https://i.pravatar.cc/40"
@@ -181,7 +200,7 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Button */}
+          {/* Recruiter Button */}
           <a href="/auth/login" className={styles.btnPrimary}>
             <p className={styles.chumo}>Bạn là nhà tuyển dụng</p>
             <p className={styles.highlight}>Đăng tuyển ngay</p>

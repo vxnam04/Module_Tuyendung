@@ -1,77 +1,60 @@
 "use client";
-import { useEffect, useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
 
-export default function AuthListener() {
+import { useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { jwtDecode } from "jwt-decode";
+
+interface TokenPayload {
+  sub: number;
+  user_type: string; // 'student' hoặc 'lecturer'
+  username: string;
+  email: string;
+  full_name: string;
+  iat: number;
+  exp: number;
+}
+
+export default function HomePage() {
   const router = useRouter();
-  const [token, setToken] = useState<string | null>(null);
-
-  // Memoize fetchUser so it doesn't recreate on every render
-  const fetchUser = useCallback(
-    async (token: string) => {
-      try {
-        const res = await fetch("http://localhost:8090/api/me", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!res.ok) throw new Error("Token không hợp lệ");
-
-        const data = await res.json();
-        console.log("✅ User data:", data);
-
-        if (data.role === "student") router.push("/student");
-        else if (data.role === "lecturer") router.push("/lecturer");
-        else if (data.role === "admin") router.push("/admin");
-        else router.push("/authorized");
-      } catch (err) {
-        console.error(err);
-        localStorage.removeItem("token");
-        alert("Token không hợp lệ, vui lòng đăng nhập lại");
-      }
-    },
-    [router]
-  );
+  const searchParams = useSearchParams();
 
   useEffect(() => {
-    // Lắng nghe token từ popup app 3001
-    const handleMessage = (event: MessageEvent) => {
-      if (event.origin !== "http://localhost:3001") return; // bảo mật
-      const { token } = event.data;
-      if (token) {
-        console.log("✅ Token received from popup:", token);
-        localStorage.setItem("token", token);
-        setToken(token);
-        fetchUser(token);
+    const urlToken = searchParams.get("token");
+
+    // Nếu có token từ URL, lưu vào localStorage
+    if (urlToken) {
+      localStorage.setItem("token", urlToken);
+    }
+
+    // Lấy token từ URL hoặc localStorage
+    const token = urlToken || localStorage.getItem("token");
+
+    if (!token) {
+      router.replace("http://localhost:3001/auth/login");
+      return;
+    }
+
+    try {
+      const decoded: TokenPayload = jwtDecode(token);
+
+      // Kiểm tra user_type để redirect
+      if (decoded.user_type === "student") {
+        router.replace("/authorized/student/home");
+      } else if (decoded.user_type === "lecturer") {
+        router.replace("/authorized/teacher/documents");
+      } else {
+        router.replace("http://localhost:3001/auth/login");
       }
-    };
-    window.addEventListener("message", handleMessage);
-
-    // Nếu đã có token sẵn
-    const existingToken = localStorage.getItem("token");
-    if (existingToken) setToken(existingToken);
-
-    return () => window.removeEventListener("message", handleMessage);
-  }, [fetchUser]); // now safe to include fetchUser here
-
-  const openLoginPopup = () => {
-    window.open(
-      "http://localhost:3001/auth/login",
-      "LoginPopup",
-      "width=500,height=700"
-    );
-  };
+    } catch (err) {
+      console.error("Token không hợp lệ:", err);
+      localStorage.removeItem("token"); // xóa token lỗi
+      router.replace("http://localhost:3001/auth/login");
+    }
+  }, [router, searchParams]);
 
   return (
-    <div>
-      {token ? (
-        <p>Đang xác thực người dùng...</p>
-      ) : (
-        <>
-          <p>Chưa đăng nhập</p>
-          <button onClick={openLoginPopup} className="btn">
-            Đăng nhập
-          </button>
-        </>
-      )}
+    <div className="flex items-center justify-center h-screen">
+      <p>Đang kiểm tra quyền truy cập...</p>
     </div>
   );
 }

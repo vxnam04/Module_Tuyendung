@@ -1,11 +1,35 @@
 "use client";
 import { useForm } from "react-hook-form";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { createJobPost, JobFormData } from "../../services/postapi";
+import { jwtDecode } from "jwt-decode";
+
+interface TokenPayload {
+  id: number;
+  email: string;
+  name?: string;
+  role?: string;
+  exp: number; // hết hạn
+  iat: number; // issued at
+}
 
 export default function NewJobPost() {
   const { register, handleSubmit, reset } = useForm<JobFormData>();
   const [loading, setLoading] = useState(false);
+  const [userInfo, setUserInfo] = useState<TokenPayload | null>(null);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      try {
+        const decoded = jwtDecode<TokenPayload>(token);
+        console.log("Decoded token:", decoded);
+        setUserInfo(decoded);
+      } catch (e) {
+        console.error("Token không hợp lệ:", e);
+      }
+    }
+  }, []);
 
   const onSubmit = async (data: JobFormData) => {
     setLoading(true);
@@ -27,105 +51,123 @@ export default function NewJobPost() {
   return (
     <div className="max-w-2xl mx-auto bg-white shadow-lg rounded-2xl p-6">
       <h1 className="text-2xl font-bold mb-4">Đăng tin tuyển dụng</h1>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <input
-          {...register("job_title")}
-          placeholder="Tiêu đề công việc"
-          className="w-full border p-2 rounded"
-        />
-        <input
-          {...register("company_name")}
-          placeholder="Tên công ty"
-          className="w-full border p-2 rounded"
-        />
-        <textarea
-          {...register("description")}
-          placeholder="Mô tả công việc"
-          className="w-full border p-2 rounded"
-        />
-        <input
-          type="date"
-          {...register("application_deadline")}
-          className="w-full border p-2 rounded"
-        />
 
-        <h2 className="font-semibold">Địa chỉ</h2>
-        <input
-          {...register("street")}
-          placeholder="Đường"
-          className="w-full border p-2 rounded"
-        />
-        <input
-          {...register("city")}
-          placeholder="Thành phố"
-          className="w-full border p-2 rounded"
-        />
-        <input
-          {...register("state")}
-          placeholder="Tỉnh/State"
-          className="w-full border p-2 rounded"
-        />
-        <input
-          {...register("country")}
-          placeholder="Quốc gia"
-          className="w-full border p-2 rounded"
-        />
-        <input
-          {...register("postal_code")}
-          placeholder="Mã bưu điện"
-          className="w-full border p-2 rounded"
-        />
+      {userInfo && (
+        <div className="mb-4 p-3 border rounded bg-gray-50">
+          <p>
+            <strong>ID:</strong> {userInfo.id}
+          </p>
+          <p>
+            <strong>Email:</strong> {userInfo.email}
+          </p>
+          <p>
+            <strong>Role:</strong> {userInfo.role}
+          </p>
+        </div>
+      )}
 
-        <h2 className="font-semibold">Kinh nghiệm</h2>
-        <input
-          type="number"
-          {...register("years_experience")}
-          placeholder="Số năm kinh nghiệm"
-          className="w-full border p-2 rounded"
-        />
+      <div className="max-w-2xl mx-auto bg-white shadow-lg rounded-2xl p-6">
+        <h1 className="text-2xl font-bold mb-4">Đăng tin tuyển dụng</h1>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <input
+            {...register("job_title")}
+            placeholder="Tiêu đề công việc"
+            className="w-full border p-2 rounded"
+          />
+          <input
+            {...register("company_name")}
+            placeholder="Tên công ty"
+            className="w-full border p-2 rounded"
+          />
+          <textarea
+            {...register("description")}
+            placeholder="Mô tả công việc"
+            className="w-full border p-2 rounded"
+          />
+          <input
+            type="date"
+            {...register("application_deadline")}
+            className="w-full border p-2 rounded"
+          />
 
-        <h2 className="font-semibold">Ngành nghề</h2>
-        <input
-          {...register("industry_name")}
-          placeholder="Tên ngành nghề"
-          className="w-full border p-2 rounded"
-        />
+          <h2 className="font-semibold">Địa chỉ</h2>
+          <input
+            {...register("street")}
+            placeholder="Đường"
+            className="w-full border p-2 rounded"
+          />
+          <input
+            {...register("city")}
+            placeholder="Thành phố"
+            className="w-full border p-2 rounded"
+          />
+          <input
+            {...register("state")}
+            placeholder="Tỉnh/State"
+            className="w-full border p-2 rounded"
+          />
+          <input
+            {...register("country")}
+            placeholder="Quốc gia"
+            className="w-full border p-2 rounded"
+          />
+          <input
+            {...register("postal_code")}
+            placeholder="Mã bưu điện"
+            className="w-full border p-2 rounded"
+          />
 
-        <h2 className="font-semibold">Vị trí tuyển dụng</h2>
-        <input
-          {...register("position_name")}
-          placeholder="Tên vị trí"
-          className="w-full border p-2 rounded"
-        />
-        <input
-          type="number"
-          {...register("quantity")}
-          placeholder="Số lượng"
-          className="w-full border p-2 rounded"
-        />
+          <h2 className="font-semibold">Kinh nghiệm</h2>
+          <input
+            type="number"
+            {...register("years_experience")}
+            placeholder="Số năm kinh nghiệm"
+            className="w-full border p-2 rounded"
+          />
 
-        <h2 className="font-semibold">Mức lương</h2>
-        <input
-          type="number"
-          {...register("salary_min")}
-          placeholder="Lương tối thiểu"
-          className="w-full border p-2 rounded"
-        />
-        <input
-          type="number"
-          {...register("salary_max")}
-          placeholder="Lương tối đa"
-          className="w-full border p-2 rounded"
-        />
+          <h2 className="font-semibold">Ngành nghề</h2>
+          <input
+            {...register("industry_name")}
+            placeholder="Tên ngành nghề"
+            className="w-full border p-2 rounded"
+          />
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
-        >
-          {loading ? "Đang đăng..." : "Đăng tin"}
-        </button>
-      </form>
+          <h2 className="font-semibold">Vị trí tuyển dụng</h2>
+          <input
+            {...register("position_name")}
+            placeholder="Tên vị trí"
+            className="w-full border p-2 rounded"
+          />
+          <input
+            type="number"
+            {...register("quantity")}
+            placeholder="Số lượng"
+            className="w-full border p-2 rounded"
+          />
+
+          <h2 className="font-semibold">Mức lương</h2>
+          <input
+            type="number"
+            {...register("salary_min")}
+            placeholder="Lương tối thiểu"
+            className="w-full border p-2 rounded"
+          />
+          <input
+            type="number"
+            {...register("salary_max")}
+            placeholder="Lương tối đa"
+            className="w-full border p-2 rounded"
+          />
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
+          >
+            {loading ? "Đang đăng..." : "Đăng tin"}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

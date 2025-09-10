@@ -1,7 +1,7 @@
 export async function getJobs() {
   const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8020";
 
-  const token = localStorage.getItem("AUTH_TOKEN"); // Lấy token lưu khi login
+  const token = localStorage.getItem("token"); // Lấy token lưu khi login
 
   const res = await fetch(`${baseUrl}/job-posts`, {
     method: "GET",
@@ -19,7 +19,7 @@ export async function getJobs() {
 export async function getJobById(id: number) {
   const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8020";
 
-  const token = localStorage.getItem("AUTH_TOKEN");
+  const token = localStorage.getItem("token");
 
   const res = await fetch(`${baseUrl}/job-posts/${id}`, {
     method: "GET",

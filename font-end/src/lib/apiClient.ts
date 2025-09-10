@@ -1,6 +1,6 @@
 // src/lib/apiClient.ts
 
-const API_BASE_URL = "http://localhost:8020"; // đổi theo Laravel backend
+const API_BASE_URL = "http://localhost:8090/api/v1"; // đúng port + version backend
 
 export interface ApiResponse<T = unknown> {
   data: T | null;
@@ -15,12 +15,12 @@ export interface LoginRequest {
 
 export interface UserProfile {
   id: number;
-  name: string;
+  full_name: string;
   email: string;
   user_type: "student" | "lecturer" | "admin";
-  account?: {
-    is_admin?: boolean;
-  };
+  student_code?: string;
+  lecturer_code?: string;
+  department?: string;
 }
 
 export interface LoginResponse {
@@ -65,6 +65,7 @@ export const apiClient = {
         ...options,
         headers,
       });
+
       const data = (await res.json().catch(() => null)) as T | null;
 
       if (!res.ok) {
@@ -82,10 +83,11 @@ export const apiClient = {
     }
   },
 
+  // Login chung (auto detect user_type)
   login: async (
     credentials: LoginRequest
   ): Promise<ApiResponse<LoginResponse>> => {
-    const res = await apiClient.request<LoginResponse>("/api/login", {
+    const res = await apiClient.request<LoginResponse>("/login", {
       method: "POST",
       body: JSON.stringify(credentials),
     });
@@ -99,14 +101,23 @@ export const apiClient = {
 
   logout: async (): Promise<void> => {
     try {
-      await apiClient.request("/api/logout", { method: "POST" });
+      await apiClient.request("/logout", { method: "POST" });
     } finally {
       clearToken();
     }
   },
 
   getProfile: async (): Promise<ApiResponse<UserProfile>> => {
-    return apiClient.request<UserProfile>("/api/me");
+    return apiClient.request<UserProfile>("/me");
+  },
+
+  refreshToken: async (): Promise<ApiResponse<{ token: string }>> => {
+    return apiClient.request<{ token: string }>("/refresh", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${getToken()}`,
+      },
+    });
   },
 
   isAuthenticated: (): boolean => !!getToken(),
