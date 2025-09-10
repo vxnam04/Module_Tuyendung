@@ -5,13 +5,14 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Tymon\JWTAuth\Facades\JWTAuth;
-use App\Models\JobPost;
-use App\Models\JobPostAddress;
-use App\Models\JobPostExperience;
-use App\Models\JobPostIndustry;
-use App\Models\JobPostPosition;
-use App\Models\JobPostSalary;
-use App\Models\JobPostWorkType;
+use App\Models\JobPosts\JobPost;
+use App\Models\JobPosts\JobPostAddress;
+use App\Models\JobPosts\JobPostExperience;
+use App\Models\JobPosts\JobPostIndustry;
+use App\Models\JobPosts\JobPostPosition;
+use App\Models\JobPosts\JobPostSalary;
+use App\Models\JobPosts\JobPostWorkType;
+use App\Models\Teacher;
 
 class JobPostController extends Controller
 {
@@ -21,8 +22,16 @@ class JobPostController extends Controller
     public function store(Request $request)
     {
         try {
-            // ✅ Lấy user từ JWT token
+            // ✅ Lấy user từ JWT token (user có lecturer_id)
             $user = JWTAuth::parseToken()->authenticate();
+
+            // ✅ Tìm teacher theo lecturer_id
+            $teacher = Teacher::where('lecturer_id', $user->id)->first();
+            if (!$teacher) {
+                return response()->json([
+                    'message' => 'Không tìm thấy teacher cho lecturer_id = ' . $user->id
+                ], 404);
+            }
 
             // ✅ Validate dữ liệu từ request
             $validated = $request->validate([
@@ -49,20 +58,18 @@ class JobPostController extends Controller
             ]);
 
             // ✅ Transaction để đảm bảo dữ liệu đồng bộ
-            $job = DB::transaction(function () use ($validated, $user) {
+            $job = DB::transaction(function () use ($validated, $teacher) {
                 // 1. job_posts
-                $job = JobPost::create([
-                    'teacher_id'          => $user->id, // Lưu id người đăng
-                    'job_title'           => $validated['job_title'],
-                    'company_name'        => $validated['company_name'],
-                    'description'         => $validated['description'] ?? null,
+                $job = $teacher->jobPosts()->create([
+                    'job_title'            => $validated['job_title'],
+                    'company_name'         => $validated['company_name'],
+                    'description'          => $validated['description'] ?? null,
                     'application_deadline' => $validated['application_deadline'] ?? null,
                 ]);
 
                 // 2. address
                 if (!empty($validated['street']) || !empty($validated['city'])) {
-                    JobPostAddress::create([
-                        'job_post_id' => $job->id,
+                    $job->address()->create([
                         'street'      => $validated['street'] ?? null,
                         'city'        => $validated['city'] ?? null,
                         'state'       => $validated['state'] ?? null,
@@ -73,24 +80,21 @@ class JobPostController extends Controller
 
                 // 3. experience
                 if (isset($validated['years_experience'])) {
-                    JobPostExperience::create([
-                        'job_post_id' => $job->id,
-                        'years'       => $validated['years_experience'],
+                    $job->experience()->create([
+                        'years' => $validated['years_experience'],
                     ]);
                 }
 
                 // 4. industry
                 if (!empty($validated['industry_name'])) {
-                    JobPostIndustry::create([
-                        'job_post_id'   => $job->id,
+                    $job->industry()->create([
                         'industry_name' => $validated['industry_name'],
                     ]);
                 }
 
                 // 5. position
                 if (!empty($validated['position_name'])) {
-                    JobPostPosition::create([
-                        'job_post_id'   => $job->id,
+                    $job->position()->create([
                         'position_name' => $validated['position_name'],
                         'quantity'      => $validated['quantity'] ?? 1,
                     ]);
@@ -98,19 +102,17 @@ class JobPostController extends Controller
 
                 // 6. salary
                 if (isset($validated['salary_min']) || isset($validated['salary_max'])) {
-                    JobPostSalary::create([
-                        'job_post_id' => $job->id,
-                        'salary_min'  => $validated['salary_min'] ?? null,
-                        'salary_max'  => $validated['salary_max'] ?? null,
-                        'currency'    => 'VND',
+                    $job->salary()->create([
+                        'salary_min' => $validated['salary_min'] ?? null,
+                        'salary_max' => $validated['salary_max'] ?? null,
+                        'currency'   => 'VND',
                     ]);
                 }
 
                 // 7. work type
                 if (!empty($validated['work_type'])) {
-                    JobPostWorkType::create([
-                        'job_post_id' => $job->id,
-                        'name'        => $validated['work_type'],
+                    $job->workType()->create([
+                        'name' => $validated['work_type'],
                     ]);
                 }
 

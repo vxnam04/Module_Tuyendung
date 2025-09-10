@@ -297,5 +297,5 @@ return [
         'storage' => Tymon\JWTAuth\Providers\Storage\Illuminate::class,
 
     ],
-
+    'algorithm' => env('JWT_ALGO', 'HS256'),
 ];

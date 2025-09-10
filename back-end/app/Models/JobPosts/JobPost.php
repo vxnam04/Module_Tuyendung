@@ -1,9 +1,10 @@
 <?php
 
-namespace App\Models;
+namespace App\Models\JobPosts;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Models\Teacher;
 
 class JobPost extends Model
 {
@@ -19,7 +20,7 @@ class JobPost extends Model
 
     public function teacher()
     {
-        return $this->belongsTo(Teacher::class);
+        return $this->belongsTo(Teacher::class, 'teacher_id');
     }
 
     public function address()

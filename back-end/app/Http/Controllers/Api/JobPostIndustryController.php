@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller; // 👈 cần có dòng này
-use App\Models\JobPostIndustry;
+use App\Models\JobPosts\JobPostIndustry;
 use Illuminate\Http\Request;
 
 class JobPostIndustryController extends Controller
