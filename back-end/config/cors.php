@@ -1,12 +1,12 @@
 <?php
 
 return [
-    'paths' => ['api/*', 'login', 'register', 'sanctum/csrf-cookie'],
-    'allowed_methods' => ['*'],
-    'allowed_origins' => ['http://localhost:3000'],
+    'paths' => ['*'], // cho tất cả các path
+    'allowed_methods' => ['*'], // tất cả GET, POST, PUT, DELETE...
+    'allowed_origins' => ['http://localhost:3000'], // origin frontend của bạn
     'allowed_origins_patterns' => [],
-    'allowed_headers' => ['*'],
+    'allowed_headers' => ['*'], // cho phép tất cả header
     'exposed_headers' => [],
     'max_age' => 0,
-    'supports_credentials' => true,
+    'supports_credentials' => false, // nếu không dùng cookie
 ];
