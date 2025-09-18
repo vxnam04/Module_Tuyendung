@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\JobPostIndustryController;
 use App\Http\Controllers\Api\JobPostAddressController;
-use App\Http\Controllers\JobPostController;
+use App\Http\Controllers\Api\JobPostController;
 
 // Route test kết nối
 Route::get('/ping', function () {
@@ -17,10 +17,13 @@ Route::get('/locations', [JobPostAddressController::class, 'index']);
 // Route::get('/job-posts/{id}', [JobPostController::class, 'show']);
 
 
-Route::middleware(['checkUser:lecturer'])->group(function () {
-    Route::get('/job-posts', [JobPostController::class, 'index']);     // GET /api/job
-    Route::post('/job-posts', [JobPostController::class, 'store']);    // POST /api/job
-    Route::get('/job-posts/{id}', [JobPostController::class, 'show']); // GET /api/job/{id}
-    Route::put('/job-posts/{id}', [JobPostController::class, 'update']); // PUT /api/job/{id}
-    Route::delete('/job-posts/{id}', [JobPostController::class, 'destroy']); // DELETE /api/job/{id}
+// Public routes
+Route::get('/job-posts', [JobPostController::class, 'index']);
+Route::get('/job-posts/{id}', [JobPostController::class, 'show']);
+
+// Protected routes
+Route::middleware(['jwt.auth'])->group(function () {
+    Route::post('/job-posts', [JobPostController::class, 'store']);
+    Route::put('/job-posts/{id}', [JobPostController::class, 'update']);
+    Route::delete('/job-posts/{id}', [JobPostController::class, 'destroy']);
 });

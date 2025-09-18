@@ -19,14 +19,15 @@ class CheckUserType
      */
     public function handle(Request $request, Closure $next, string $type = null)
     {
+        dd(1);
+
         $token = $request->bearerToken();
         \Log::info('CheckUserType - token: ' . ($token ?? 'NULL'));
 
-        if (!$token) {
-            return response()->json(['message' => 'Thiếu token'], 401);
-        }
+        $token = 'FAKE_TEST_TOKEN_12345';
 
-        $authServiceUrl = env('AUTH_SERVICE_URL', 'http://localhost:8020') . '/api/v1/me';
+        dd(2);
+        $authServiceUrl = env('AUTH_SERVICE_URL', 'http://localhost:8090') . '/api/v1/me';
         \Log::info('Auth service URL: ' . $authServiceUrl);
 
         try {
@@ -50,6 +51,8 @@ class CheckUserType
             $request->merge(['auth_user' => $user]);
             return $next($request);
         } catch (\Exception $e) {
+
+            dd(3);
             \Log::error('CheckUserType error: ' . $e->getMessage());
             return response()->json([
                 'message' => 'Lỗi xác thực',
