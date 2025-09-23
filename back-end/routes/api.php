@@ -10,11 +10,6 @@ Route::get('/ping', function () {
     return response()->json(['message' => 'Laravel OK']);
 });
 
-// ===== ROUTES PUBLIC (không cần token) =====
-Route::get('/job-industries', [JobPostIndustryController::class, 'index']);
-Route::get('/locations', [JobPostAddressController::class, 'index']);
-// Route::get('/job-posts', [JobPostController::class, 'index']);
-// Route::get('/job-posts/{id}', [JobPostController::class, 'show']);
 
 
 // Public routes
@@ -26,4 +21,8 @@ Route::middleware(['jwt.auth'])->group(function () {
     Route::post('/job-posts', [JobPostController::class, 'store']);
     Route::put('/job-posts/{id}', [JobPostController::class, 'update']);
     Route::delete('/job-posts/{id}', [JobPostController::class, 'destroy']);
+
+    Route::get('/positions', [JobPostController::class, 'positions']);
+    // Route::get('/industries', [JobPostController::class, 'industries']);
+    Route::get('/experiences', [JobPostController::class, 'experiences']);
 });

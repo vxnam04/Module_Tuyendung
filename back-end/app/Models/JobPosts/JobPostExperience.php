@@ -3,15 +3,12 @@
 namespace App\Models\JobPosts;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class JobPostExperience extends Model
 {
-    use HasFactory;
-
     protected $fillable = [
         'job_post_id',
-        'years',
+        'years'
     ];
 
     public function jobPost()

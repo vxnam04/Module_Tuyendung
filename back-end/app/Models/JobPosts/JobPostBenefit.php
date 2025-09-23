@@ -4,15 +4,12 @@ namespace App\Models\JobPosts;
 
 use Illuminate\Database\Eloquent\Model;
 
-class JobPostAddress extends Model
+class JobPostBenefit extends Model
 {
     protected $fillable = [
         'job_post_id',
-        'street',
-        'city',
-        'state',
-        'country',
-        'postal_code'
+        'benefit_type', // main / additional
+        'description'
     ];
 
     public function jobPost()
