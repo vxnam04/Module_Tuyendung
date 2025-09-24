@@ -10,7 +10,8 @@ class JobPostSalary extends Model
         'job_post_id',
         'salary_min',
         'salary_max',
-        'currency'
+        'currency',
+        'salary_type'
     ];
 
     public function jobPost()

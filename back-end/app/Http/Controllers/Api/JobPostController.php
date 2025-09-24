@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Models\Level;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\JobPosts\JobPost;
@@ -9,7 +10,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Teacher;
 use Illuminate\Support\Facades\Log;
 use App\Models\JobPosts\JobPostPosition;
-use App\Models\JobPosts\JobPostIndustry;
 use App\Models\JobPosts\JobPostExperience;
 use App\Models\JobPosts\JobPostWorkType;
 
@@ -20,17 +20,20 @@ class JobPostController extends Controller
         $this->middleware('jwt.auth')->only(['store', 'update', 'destroy']);
     }
 
+    /**
+     * Tạo mới job post
+     */
     public function store(Request $request)
     {
         try {
-            // Lấy user từ JWT middleware
             $user = $request->attributes->get('user');
-            if (!$user || !isset($user['sub'])) return response()->json(['message' => 'Unauthorized'], 401);
+            if (!$user || !isset($user['sub'])) {
+                return response()->json(['message' => 'Unauthorized'], 401);
+            }
 
             $teacher = Teacher::where('lecturer_id', $user['sub'])->first();
             if (!$teacher) return response()->json(['message' => 'Không tìm thấy teacher'], 404);
 
-            // Validate input
             $validated = $request->validate([
                 'job_title'            => 'required|string|max:255',
                 'company_name'         => 'required|string|max:255',
@@ -39,18 +42,16 @@ class JobPostController extends Controller
                 'contact_email'        => 'nullable|email',
                 'contact_phone'        => 'nullable|string|max:20',
 
-                'work_location'        => 'nullable|array',
-                'work_location.*.street' => 'nullable|string|max:255',
-                'work_location.*.city'   => 'nullable|string|max:100',
-                'work_location.*.state'  => 'nullable|string|max:100',
-                'work_location.*.country' => 'nullable|string|max:100',
-                'work_location.*.postal_code' => 'nullable|string|max:20',
+                'addresses'            => 'nullable|array',
+                'addresses.*.street'   => 'nullable|string|max:255',
+                'addresses.*.city'     => 'nullable|string|max:100',
+                'addresses.*.state'    => 'nullable|string|max:100',
 
-                'job_type'             => 'nullable|array',
-                'job_type.*'           => 'string|max:50',
+                'job_type'             => 'required|string', // string thay vì array
 
-                'salary_min'           => 'nullable|integer|min:0',
-                'salary_max'           => 'nullable|integer|min:0',
+                'salary'               => 'nullable|array',
+                'salary.salary_min'    => 'nullable|integer|min:0',
+                'salary.salary_max'    => 'nullable|integer|min:0',
 
                 'experience_required'  => 'nullable|integer|min:0',
                 'skills_required'      => 'nullable|array',
@@ -63,11 +64,12 @@ class JobPostController extends Controller
                 'additional_benefits'  => 'nullable|array',
                 'additional_benefits.*' => 'string|max:255',
 
-                'working_days'         => 'nullable|array',
-                'working_days.*'       => 'string|max:20',
+                'working_days'         => 'nullable',
+                'working_time'         => 'nullable|array',
+                'working_time.start'   => 'nullable|string',
+                'working_time.end'     => 'nullable|string',
 
-                'work_time.start'      => 'nullable|string',
-                'work_time.end'        => 'nullable|string',
+                'level_id'             => 'nullable|exists:job_post_levels,id',
             ]);
 
             $job = DB::transaction(function () use ($validated, $teacher) {
@@ -78,28 +80,29 @@ class JobPostController extends Controller
                     'application_deadline' => $validated['application_deadline'] ?? null,
                     'contact_email'        => $validated['contact_email'] ?? null,
                     'contact_phone'        => $validated['contact_phone'] ?? null,
+                    'level_id'             => $validated['level_id'] ?? null,
                 ]);
 
-                // Work locations
-                if (!empty($validated['work_location'])) {
-                    foreach ($validated['work_location'] as $loc) {
+                // Addresses
+                if (!empty($validated['addresses'])) {
+                    foreach ($validated['addresses'] as $loc) {
                         $job->addresses()->create($loc);
                     }
                 }
 
-                // Work types
+                // Job type (string)
                 if (!empty($validated['job_type'])) {
-                    foreach ($validated['job_type'] as $type) {
-                        $job->workTypes()->create(['work_type' => $type]);
-                    }
+                    $job->workTypes()->create(['work_type' => $validated['job_type']]);
                 }
 
                 // Salary
-                $job->salary()->create([
-                    'salary_min' => $validated['salary_min'] ?? null,
-                    'salary_max' => $validated['salary_max'] ?? null,
-                    'currency'   => 'VND'
-                ]);
+                if (!empty($validated['salary'])) {
+                    $job->salary()->create([
+                        'salary_min' => $validated['salary']['salary_min'] ?? null,
+                        'salary_max' => $validated['salary']['salary_max'] ?? null,
+                        'currency'   => 'VND'
+                    ]);
+                }
 
                 // Experience
                 if (isset($validated['experience_required'])) {
@@ -131,17 +134,19 @@ class JobPostController extends Controller
                 }
 
                 // Working days
-                if (!empty($validated['working_days'])) {
-                    foreach ($validated['working_days'] as $day) {
-                        $job->workingDays()->create(['day_name' => $day]);
-                    }
+                $workingDays = $validated['working_days'] ?? [];
+                if (is_string($workingDays)) {
+                    $workingDays = [$workingDays];
+                }
+                foreach ($workingDays as $day) {
+                    $job->workingDays()->create(['day_name' => $day]);
                 }
 
                 // Working times
-                if (!empty($validated['work_time'])) {
+                if (!empty($validated['working_time'])) {
                     $job->workingTimes()->create([
-                        'start_time' => $validated['work_time']['start'] ?? null,
-                        'end_time' => $validated['work_time']['end'] ?? null
+                        'start_time' => $validated['working_time']['start'] ?? null,
+                        'end_time'   => $validated['working_time']['end'] ?? null
                     ]);
                 }
 
@@ -160,7 +165,8 @@ class JobPostController extends Controller
                     'benefits',
                     'workingDays',
                     'workingTimes',
-                    'teacher'
+                    'teacher',
+                    'level'
                 ])
             ], 201);
         } catch (\Exception $e) {
@@ -172,48 +178,63 @@ class JobPostController extends Controller
         }
     }
 
-    // index, show, update, destroy có thể giữ nguyên, chỉ cần fix quan hệ tương tự
-
-
-
     /**
-     * Lấy tất cả job posts (public)
+     * Lấy tất cả job posts
      */
     public function index()
     {
-        $jobs = JobPost::with([
-            'address',
-            'experience',
-            'industry',
-            'position',
-            'salary',
-            'workType',
-            'teacher'
-        ])->latest()->get();
+        try {
+            $jobs = JobPost::with([
+                'addresses',
+                'workTypes',
+                'salary',
+                'experiences',
+                'skills',
+                'educationLevels',
+                'benefits',
+                'workingDays',
+                'workingTimes',
+                'teacher',
+                'level'
+            ])->latest()->get();
 
-        return response()->json($jobs);
+            return response()->json([
+                'success' => true,
+                'data' => $jobs
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error fetching job posts: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching job posts',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
-     * Lấy chi tiết 1 job post (public)
+     * Lấy chi tiết 1 job post
      */
     public function show($id)
     {
         $job = JobPost::with([
-            'address',
-            'experience',
-            'industry',
-            'position',
-            'salary',
-            'workType',
-            'teacher'
+            'addresses',
+            'experiences',
+            'skills',
+            'educationLevels',
+            'benefits',
+            'workingDays',
+            'workingTimes',
+            'workTypes',
+            'teacher',
+            'level'
         ])->findOrFail($id);
 
         return response()->json($job);
     }
 
     /**
-     * Cập nhật job post (yêu cầu token)
+     * Cập nhật job post
      */
     public function update(Request $request, $id)
     {
@@ -230,6 +251,7 @@ class JobPostController extends Controller
                 'company_name' => 'sometimes|string|max:255',
                 'description'  => 'nullable|string',
                 'application_deadline' => 'nullable|date',
+                'level_id' => 'nullable|exists:job_post_levels,id',
             ]);
 
             $job->update($validated);
@@ -245,7 +267,7 @@ class JobPostController extends Controller
     }
 
     /**
-     * Xóa job post (yêu cầu token)
+     * Xóa job post
      */
     public function destroy(Request $request, $id)
     {
@@ -266,21 +288,30 @@ class JobPostController extends Controller
         }
     }
 
+    /**
+     * Lấy positions
+     */
     public function positions()
     {
         $positions = JobPostPosition::select('id', 'position_name')->get();
         return response()->json($positions);
     }
 
-    // public function industries()
-    // {
-    //     $industries = JobPostIndustry::select('id', 'industry_name as name')->get();
-    //     return response()->json($industries);
-    // }
-
+    /**
+     * Lấy experiences
+     */
     public function experiences()
     {
         $experiences = JobPostExperience::select('id', 'years as name')->get();
         return response()->json($experiences);
+    }
+
+    /**
+     * Lấy levels
+     */
+    public function levels()
+    {
+        $levels = Level::select('id', 'name')->get();
+        return response()->json($levels);
     }
 }

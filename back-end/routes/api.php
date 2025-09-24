@@ -12,12 +12,9 @@ Route::get('/ping', function () {
 
 
 
-// Public routes
-Route::get('/job-posts', [JobPostController::class, 'index']);
-Route::get('/job-posts/{id}', [JobPostController::class, 'show']);
-
 // Protected routes
 Route::middleware(['jwt.auth'])->group(function () {
+    Route::get('/job-posts-list', [JobPostController::class, 'index']);
     Route::post('/job-posts', [JobPostController::class, 'store']);
     Route::put('/job-posts/{id}', [JobPostController::class, 'update']);
     Route::delete('/job-posts/{id}', [JobPostController::class, 'destroy']);
@@ -25,4 +22,5 @@ Route::middleware(['jwt.auth'])->group(function () {
     Route::get('/positions', [JobPostController::class, 'positions']);
     // Route::get('/industries', [JobPostController::class, 'industries']);
     Route::get('/experiences', [JobPostController::class, 'experiences']);
+    Route::get('/levels', [JobPostController::class, 'levels']);
 });

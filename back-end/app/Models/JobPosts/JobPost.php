@@ -2,6 +2,7 @@
 
 namespace App\Models\JobPosts;
 
+use App\Models\Level;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -48,6 +49,13 @@ class JobPost extends Model
     {
         return $this->hasMany(JobPostSkill::class);
     }
+
+    // levels
+    public function level()
+    {
+        return $this->belongsTo(Level::class, 'level_id');
+    }
+
 
     // Trình độ học vấn
     public function educationLevels()
