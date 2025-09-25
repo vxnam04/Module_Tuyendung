@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Models\Level;
+use App\Models\JobPosts\Level;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\JobPosts\JobPost;
@@ -37,6 +37,7 @@ class JobPostController extends Controller
             $validated = $request->validate([
                 'job_title'            => 'required|string|max:255',
                 'company_name'         => 'required|string|max:255',
+                'positions'            => 'required|string|max:255', // frontend gửi string
                 'description'          => 'nullable|string',
                 'application_deadline' => 'nullable|date',
                 'contact_email'        => 'nullable|email',
@@ -47,7 +48,7 @@ class JobPostController extends Controller
                 'addresses.*.city'     => 'nullable|string|max:100',
                 'addresses.*.state'    => 'nullable|string|max:100',
 
-                'job_type'             => 'required|string', // string thay vì array
+                'job_type'             => 'required|string',
 
                 'salary'               => 'nullable|array',
                 'salary.salary_min'    => 'nullable|integer|min:0',
@@ -59,17 +60,16 @@ class JobPostController extends Controller
 
                 'education_level'      => 'nullable|string|max:100',
 
-                'benefits'             => 'nullable|array',
-                'benefits.*'           => 'string|max:255',
-                'additional_benefits'  => 'nullable|array',
-                'additional_benefits.*' => 'string|max:255',
+
+                'benefits'           => 'string|max:255',
+                'additional_benefits' => 'string|max:255',
 
                 'working_days'         => 'nullable',
                 'working_time'         => 'nullable|array',
                 'working_time.start'   => 'nullable|string',
                 'working_time.end'     => 'nullable|string',
 
-                'level_id'             => 'nullable|exists:job_post_levels,id',
+                'level_id'             => 'nullable|integer',
             ]);
 
             $job = DB::transaction(function () use ($validated, $teacher) {
@@ -80,8 +80,14 @@ class JobPostController extends Controller
                     'application_deadline' => $validated['application_deadline'] ?? null,
                     'contact_email'        => $validated['contact_email'] ?? null,
                     'contact_phone'        => $validated['contact_phone'] ?? null,
-                    'level_id'             => $validated['level_id'] ?? null,
                 ]);
+
+                // Positions: string -> lưu 1 record
+                if (!empty($validated['positions'])) {
+                    $job->positions()->create([
+                        'position_name' => $validated['positions']
+                    ]);
+                }
 
                 // Addresses
                 if (!empty($validated['addresses'])) {
@@ -90,7 +96,7 @@ class JobPostController extends Controller
                     }
                 }
 
-                // Job type (string)
+                // Job type
                 if (!empty($validated['job_type'])) {
                     $job->workTypes()->create(['work_type' => $validated['job_type']]);
                 }
@@ -122,16 +128,21 @@ class JobPostController extends Controller
                 }
 
                 // Benefits
+                // Benefits
                 if (!empty($validated['benefits'])) {
-                    foreach ($validated['benefits'] as $b) {
-                        $job->benefits()->create(['benefit_type' => 'main', 'description' => $b]);
-                    }
+                    $job->benefits()->create([
+                        'benefit_type' => 'main',
+                        'description'  => $validated['benefits'],
+                    ]);
                 }
+
                 if (!empty($validated['additional_benefits'])) {
-                    foreach ($validated['additional_benefits'] as $b) {
-                        $job->benefits()->create(['benefit_type' => 'additional', 'description' => $b]);
-                    }
+                    $job->benefits()->create([
+                        'benefit_type' => 'additional',
+                        'description'  => $validated['additional_benefits'],
+                    ]);
                 }
+
 
                 // Working days
                 $workingDays = $validated['working_days'] ?? [];
@@ -139,7 +150,9 @@ class JobPostController extends Controller
                     $workingDays = [$workingDays];
                 }
                 foreach ($workingDays as $day) {
-                    $job->workingDays()->create(['day_name' => $day]);
+                    if (!empty($day)) {
+                        $job->workingDays()->create(['day_name' => $day]);
+                    }
                 }
 
                 // Working times
@@ -150,12 +163,30 @@ class JobPostController extends Controller
                     ]);
                 }
 
+                // Levels
+                $levels = [
+                    1 => 'Thực tập',
+                    2 => 'Nhân viên',
+                    3 => 'Trưởng nhóm',
+                    4 => 'Quản lý',
+                    5 => 'Giám đốc',
+                ];
+
+
+                if (!empty($validated['level_id'])) {
+                    Level::create([
+                        'job_post_id' => $job->id,
+                        'name'        => $validated['level_id'], // Lưu trực tiếp text vào cột name
+                    ]);
+                }
+
                 return $job;
             });
 
             return response()->json([
                 'message' => 'Job post created successfully',
                 'job_post' => $job->load([
+                    'positions',
                     'addresses',
                     'workTypes',
                     'salary',
@@ -186,6 +217,7 @@ class JobPostController extends Controller
         try {
             $jobs = JobPost::with([
                 'addresses',
+                'positions',
                 'workTypes',
                 'salary',
                 'experiences',
@@ -219,6 +251,7 @@ class JobPostController extends Controller
     {
         $job = JobPost::with([
             'addresses',
+            'positions',
             'experiences',
             'skills',
             'educationLevels',
@@ -251,14 +284,38 @@ class JobPostController extends Controller
                 'company_name' => 'sometimes|string|max:255',
                 'description'  => 'nullable|string',
                 'application_deadline' => 'nullable|date',
-                'level_id' => 'nullable|exists:job_post_levels,id',
+                'level_id'     => 'nullable|integer',
             ]);
 
-            $job->update($validated);
+            $job->update($request->only(['job_title', 'company_name', 'description', 'application_deadline']));
+
+            // update level
+            if (array_key_exists('level_id', $validated)) {
+                $levels = [
+                    1 => 'Thực tập',
+                    2 => 'Nhân viên',
+                    3 => 'Trưởng nhóm',
+                    4 => 'Quản lý',
+                    5 => 'Giám đốc',
+                ];
+
+
+                if (array_key_exists('level_id', $validated)) {
+                    if ($validated['level_id']) {
+                        Level::updateOrCreate(
+                            ['job_post_id' => $job->id],
+                            ['level_id' => $validated['level_id']]
+                        );
+                    } else {
+                        // nếu null thì xóa
+                        $job->level()->delete();
+                    }
+                }
+            }
 
             return response()->json([
                 'message' => 'Job post updated successfully',
-                'job_post' => $job
+                'job_post' => $job->fresh()->load(['positions', 'level'])
             ]);
         } catch (\Exception $e) {
             Log::error('Error updating job post: ' . $e->getMessage());
@@ -311,7 +368,13 @@ class JobPostController extends Controller
      */
     public function levels()
     {
-        $levels = Level::select('id', 'name')->get();
-        return response()->json($levels);
+        // nếu muốn trả về danh sách cứng
+        return response()->json([
+            ['id' => 1, 'name' => 'Thực tập'],
+            ['id' => 2, 'name' => 'Nhân viên'],
+            ['id' => 3, 'name' => 'Trưởng nhóm'],
+            ['id' => 4, 'name' => 'Quản lý'],
+            ['id' => 5, 'name' => 'Giám đốc'],
+        ]);
     }
 }

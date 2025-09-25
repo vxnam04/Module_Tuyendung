@@ -2,7 +2,7 @@
 
 namespace App\Models\JobPosts;
 
-use App\Models\Level;
+use App\Models\JobPosts\Level;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -19,7 +19,11 @@ class JobPost extends Model
         'contact_email',
         'contact_phone',
     ];
-
+    // positions
+    public function positions()
+    {
+        return $this->hasMany(JobPostPosition::class);
+    }
     // Địa điểm làm việc (1 job nhiều địa điểm)
     public function addresses()
     {
@@ -53,7 +57,7 @@ class JobPost extends Model
     // levels
     public function level()
     {
-        return $this->belongsTo(Level::class, 'level_id');
+        return $this->hasOne(Level::class, 'job_post_id');
     }
 
 
