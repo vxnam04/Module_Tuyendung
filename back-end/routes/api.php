@@ -15,12 +15,18 @@ Route::get('/ping', function () {
 // Protected routes
 Route::middleware(['jwt.auth'])->group(function () {
     Route::get('/job-posts-list', [JobPostController::class, 'index']);
+    Route::get('/job-posts-detail/{id}', [JobPostController::class, 'show']);
     Route::post('/job-posts', [JobPostController::class, 'store']);
     Route::put('/job-posts/{id}', [JobPostController::class, 'update']);
     Route::delete('/job-posts/{id}', [JobPostController::class, 'destroy']);
-
+    // Vị trí chuyên môn, Kiểu IT suport hay dev 
     Route::get('/positions', [JobPostController::class, 'positions']);
-    // Route::get('/industries', [JobPostController::class, 'industries']);
+    // Ngành nghề
+    Route::get('/industries', [JobPostController::class, 'industries']);
+    // Kinh nghiệm
     Route::get('/experiences', [JobPostController::class, 'experiences']);
+    // Cấp bậc kiểu inter, trưởng phòng 
     Route::get('/levels', [JobPostController::class, 'levels']);
+    // Địa điểm
+    Route::get('/location', [JobPostController::class, 'location']);
 });

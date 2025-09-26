@@ -11,6 +11,8 @@ use App\Models\Teacher;
 use Illuminate\Support\Facades\Log;
 use App\Models\JobPosts\JobPostPosition;
 use App\Models\JobPosts\JobPostExperience;
+use App\Models\JobPosts\JobPostIndustry;
+use App\Models\JobPosts\JobPostAddress;
 use App\Models\JobPosts\JobPostWorkType;
 
 class JobPostController extends Controller
@@ -60,16 +62,18 @@ class JobPostController extends Controller
 
                 'education_level'      => 'nullable|string|max:100',
 
-
-                'benefits'           => 'string|max:255',
-                'additional_benefits' => 'string|max:255',
+                'benefits'             => 'string|max:255',
+                'additional_benefits'  => 'string|max:255',
 
                 'working_days'         => 'nullable',
                 'working_time'         => 'nullable|array',
                 'working_time.start'   => 'nullable|string',
                 'working_time.end'     => 'nullable|string',
 
-                'level_id'             => 'nullable|integer',
+                'level_id'             => 'nullable|string|max:100', // lưu name trực tiếp
+                'industries' => 'required|string|max:100', // chỉ nhận 1 ngành nghề
+
+
             ]);
 
             $job = DB::transaction(function () use ($validated, $teacher) {
@@ -82,7 +86,7 @@ class JobPostController extends Controller
                     'contact_phone'        => $validated['contact_phone'] ?? null,
                 ]);
 
-                // Positions: string -> lưu 1 record
+                // Positions
                 if (!empty($validated['positions'])) {
                     $job->positions()->create([
                         'position_name' => $validated['positions']
@@ -128,7 +132,6 @@ class JobPostController extends Controller
                 }
 
                 // Benefits
-                // Benefits
                 if (!empty($validated['benefits'])) {
                     $job->benefits()->create([
                         'benefit_type' => 'main',
@@ -143,16 +146,11 @@ class JobPostController extends Controller
                     ]);
                 }
 
-
                 // Working days
                 $workingDays = $validated['working_days'] ?? [];
-                if (is_string($workingDays)) {
-                    $workingDays = [$workingDays];
-                }
+                if (is_string($workingDays)) $workingDays = [$workingDays];
                 foreach ($workingDays as $day) {
-                    if (!empty($day)) {
-                        $job->workingDays()->create(['day_name' => $day]);
-                    }
+                    if (!empty($day)) $job->workingDays()->create(['day_name' => $day]);
                 }
 
                 // Working times
@@ -164,21 +162,20 @@ class JobPostController extends Controller
                 }
 
                 // Levels
-                $levels = [
-                    1 => 'Thực tập',
-                    2 => 'Nhân viên',
-                    3 => 'Trưởng nhóm',
-                    4 => 'Quản lý',
-                    5 => 'Giám đốc',
-                ];
-
-
                 if (!empty($validated['level_id'])) {
                     Level::create([
                         'job_post_id' => $job->id,
-                        'name'        => $validated['level_id'], // Lưu trực tiếp text vào cột name
+                        'name'        => $validated['level_id'], // lưu trực tiếp name
                     ]);
                 }
+
+                // Industries
+                if (!empty($validated['industries'])) {
+                    $job->industries()->create([
+                        'industry_name' => $validated['industries'],
+                    ]);
+                }
+
 
                 return $job;
             });
@@ -197,7 +194,8 @@ class JobPostController extends Controller
                     'workingDays',
                     'workingTimes',
                     'teacher',
-                    'level'
+                    'level',
+                    'industries'
                 ])
             ], 201);
         } catch (\Exception $e) {
@@ -218,6 +216,7 @@ class JobPostController extends Controller
             $jobs = JobPost::with([
                 'addresses',
                 'positions',
+                'industries',
                 'workTypes',
                 'salary',
                 'experiences',
@@ -252,7 +251,9 @@ class JobPostController extends Controller
         $job = JobPost::with([
             'addresses',
             'positions',
+            'industries',
             'experiences',
+            'salary',
             'skills',
             'educationLevels',
             'benefits',
@@ -284,38 +285,38 @@ class JobPostController extends Controller
                 'company_name' => 'sometimes|string|max:255',
                 'description'  => 'nullable|string',
                 'application_deadline' => 'nullable|date',
-                'level_id'     => 'nullable|integer',
+                'level_id'     => 'nullable|string|max:100', // lưu name trực tiếp
+                'industries'   => 'nullable|array',
+                'industries.*' => 'string|max:100',
             ]);
 
-            $job->update($request->only(['job_title', 'company_name', 'description', 'application_deadline']));
+            $job->update($request->only(['job_title', 'company_name', 'description', 'application_deadline', 'quantity']));
 
-            // update level
+            // Update level
             if (array_key_exists('level_id', $validated)) {
-                $levels = [
-                    1 => 'Thực tập',
-                    2 => 'Nhân viên',
-                    3 => 'Trưởng nhóm',
-                    4 => 'Quản lý',
-                    5 => 'Giám đốc',
-                ];
+                if ($validated['level_id']) {
+                    Level::updateOrCreate(
+                        ['job_post_id' => $job->id],
+                        ['name' => $validated['level_id']]
+                    );
+                } else {
+                    $job->level()->delete();
+                }
+            }
 
-
-                if (array_key_exists('level_id', $validated)) {
-                    if ($validated['level_id']) {
-                        Level::updateOrCreate(
-                            ['job_post_id' => $job->id],
-                            ['level_id' => $validated['level_id']]
-                        );
-                    } else {
-                        // nếu null thì xóa
-                        $job->level()->delete();
-                    }
+            // Update industries
+            if (array_key_exists('industries', $validated)) {
+                $job->industries()->delete(); // xóa cũ
+                foreach ($validated['industries'] as $industryName) {
+                    $job->industries()->create([
+                        'industry_name' => $industryName
+                    ]);
                 }
             }
 
             return response()->json([
                 'message' => 'Job post updated successfully',
-                'job_post' => $job->fresh()->load(['positions', 'level'])
+                'job_post' => $job->fresh()->load(['positions', 'level', 'industries'])
             ]);
         } catch (\Exception $e) {
             Log::error('Error updating job post: ' . $e->getMessage());
@@ -364,11 +365,10 @@ class JobPostController extends Controller
     }
 
     /**
-     * Lấy levels
+     * Lấy levels hard-code
      */
     public function levels()
     {
-        // nếu muốn trả về danh sách cứng
         return response()->json([
             ['id' => 1, 'name' => 'Thực tập'],
             ['id' => 2, 'name' => 'Nhân viên'],
@@ -376,5 +376,53 @@ class JobPostController extends Controller
             ['id' => 4, 'name' => 'Quản lý'],
             ['id' => 5, 'name' => 'Giám đốc'],
         ]);
+    }
+
+    /**
+     * Lấy industries hard-code
+     */
+    public function industries()
+    {
+        return response()->json([
+            ['id' => 1, 'name' => 'Công nghệ thông tin'],
+            ['id' => 2, 'name' => 'Phần mềm / Lập trình'],
+            ['id' => 3, 'name' => 'Kinh doanh / Sales'],
+            ['id' => 4, 'name' => 'Marketing / Truyền thông'],
+            ['id' => 5, 'name' => 'Tài chính – Ngân hàng'],
+            ['id' => 6, 'name' => 'Kế toán / Kiểm toán'],
+            ['id' => 7, 'name' => 'Nhân sự / Hành chính'],
+            ['id' => 8, 'name' => 'Thiết kế – Mỹ thuật / Creative'],
+            ['id' => 9, 'name' => 'Y tế – Dược'],
+            ['id' => 10, 'name' => 'Giáo dục – Đào tạo'],
+            ['id' => 11, 'name' => 'Du lịch – Nhà hàng – Khách sạn'],
+            ['id' => 12, 'name' => 'Sản xuất – Vận hành'],
+            ['id' => 13, 'name' => 'Xây dựng / Kiến trúc'],
+            ['id' => 14, 'name' => 'Logistics / Vận tải'],
+            ['id' => 15, 'name' => 'Điện tử – Điện lạnh'],
+            ['id' => 16, 'name' => 'Cơ khí – Chế tạo'],
+            ['id' => 17, 'name' => 'Luật / Pháp lý'],
+            ['id' => 18, 'name' => 'Báo chí / Truyền hình'],
+            ['id' => 19, 'name' => 'Nông nghiệp / Thủy sản'],
+            ['id' => 20, 'name' => 'Môi trường / Xử lý chất thải'],
+            ['id' => 21, 'name' => 'Khoa học – Nghiên cứu'],
+            ['id' => 22, 'name' => 'Chăm sóc khách hàng / Support'],
+            ['id' => 23, 'name' => 'Bất động sản'],
+            ['id' => 24, 'name' => 'Hàng không / Vận tải hàng không'],
+            ['id' => 25, 'name' => 'Thời trang / Mỹ phẩm'],
+            ['id' => 26, 'name' => 'Điện / Năng lượng'],
+            ['id' => 27, 'name' => 'Dịch vụ / Tư vấn'],
+            ['id' => 28, 'name' => 'Công nghệ sinh học'],
+            ['id' => 29, 'name' => 'An ninh – Quân đội – Cảnh sát'],
+            ['id' => 30, 'name' => 'Khác'],
+        ]);
+    }
+
+    /**
+     * Lấy location
+     */
+    public function location()
+    {
+        $locations = JobPostAddress::select('street', 'city', 'state')->get();
+        return response()->json($locations);
     }
 }

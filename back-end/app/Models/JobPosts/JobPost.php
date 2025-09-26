@@ -24,6 +24,11 @@ class JobPost extends Model
     {
         return $this->hasMany(JobPostPosition::class);
     }
+    // Industry nganh nghe
+    public function industries()
+    {
+        return $this->hasMany(JobPostIndustry::class);
+    }
     // Địa điểm làm việc (1 job nhiều địa điểm)
     public function addresses()
     {
