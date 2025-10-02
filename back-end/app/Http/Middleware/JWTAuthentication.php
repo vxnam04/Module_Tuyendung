@@ -20,6 +20,7 @@ class JWTAuthentication
      */
     public function handle(Request $request, Closure $next): Response
     {
+
         $token = $request->bearerToken(); // Lấy token từ header Authorization
 
         if (!$token) {

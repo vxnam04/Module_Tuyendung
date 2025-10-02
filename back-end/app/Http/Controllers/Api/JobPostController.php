@@ -55,6 +55,7 @@ class JobPostController extends Controller
                 'salary'               => 'nullable|array',
                 'salary.salary_min'    => 'nullable|integer|min:0',
                 'salary.salary_max'    => 'nullable|integer|min:0',
+                'salary.currency'      => 'nullable|string|in:VND,USD,EUR,JPY',
 
                 'experience_required'  => 'nullable|integer|min:0',
                 'skills_required'      => 'nullable|array',
@@ -110,7 +111,7 @@ class JobPostController extends Controller
                     $job->salary()->create([
                         'salary_min' => $validated['salary']['salary_min'] ?? null,
                         'salary_max' => $validated['salary']['salary_max'] ?? null,
-                        'currency'   => 'VND'
+                        'currency'   => $validated['salary']['currency'] ?? 'VND'
                     ]);
                 }
 

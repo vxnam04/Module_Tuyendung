@@ -3,6 +3,7 @@
 namespace App\Models\JobPosts;
 
 use App\Models\JobPosts\Level;
+use App\Models\JobApplication;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -94,5 +95,10 @@ class JobPost extends Model
     public function teacher()
     {
         return $this->belongsTo(\App\Models\Teacher::class, 'teacher_id');
+    }
+    // cv
+    public function applications()
+    {
+        return $this->hasMany(JobApplication::class, 'job_post_id');
     }
 }
