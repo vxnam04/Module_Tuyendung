@@ -11,11 +11,10 @@ class JobPostAddresseSeeder extends Seeder
 {
     public function run(): void
     {
-        $faker = Faker::create('vi_VN'); // Faker tiếng Việt
+        $faker = Faker::create('vi_VN');
 
-        // Tạo 1 job post
         $jobPostId = DB::table('job_posts')->insertGetId([
-            'teacher_id'           => 1, // gán cứng 1
+            'teacher_id'           => 1,
             'job_title'            => $faker->jobTitle(),
             'company_name'         => $faker->company(),
             'description'          => $faker->sentence(15),
@@ -24,9 +23,8 @@ class JobPostAddresseSeeder extends Seeder
             'updated_at'           => Carbon::now(),
         ]);
 
-        // Tạo address cho job post vừa insert
         DB::table('job_post_addresses')->insert([
-            'job_post_id' => $jobPostId, // dùng id vừa tạo
+            'job_post_id' => $jobPostId,
             'street'      => $faker->streetAddress(),
             'city'        => $faker->randomElement(['Hà Nội', 'Đà Nẵng', 'Hồ Chí Minh', 'Cần Thơ']),
             'state'       => $faker->randomElement(['HN', 'HCM', 'DN', 'CT']),

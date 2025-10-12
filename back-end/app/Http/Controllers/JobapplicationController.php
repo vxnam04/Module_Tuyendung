@@ -37,7 +37,10 @@ class JobApplicationController extends Controller
         // Nếu không chọn CV có sẵn → kiểm tra upload CV mới
         if (!$cvId) {
             if ($request->hasFile('file')) {
-                $path = $request->file('file')->store('cvs', 'public');
+                // Lưu trực tiếp vào public/cvs
+                $file = $request->file('file');
+                $fileName = time() . '_' . $file->getClientOriginalName();
+                $file->move(public_path('cvs'), $fileName);
 
                 $cv = StudentCv::create([
                     'student_id' => $studentId,
@@ -46,11 +49,12 @@ class JobApplicationController extends Controller
                     'email'      => $request->email,
                     'title'      => $request->title,
                     'summary'    => $request->summary,
-                    'file_url'   => $path,
+                    'file_url'   => url('cvs/' . $fileName), // URL trực tiếp mở được
                 ]);
 
                 $cvId = $cv->id;
             } else {
+                // Lấy CV mới nhất nếu không upload
                 $latestCv = StudentCv::where('student_id', $studentId)
                     ->latest('created_at')
                     ->first();
@@ -123,6 +127,32 @@ class JobApplicationController extends Controller
             ->first();
 
         return response()->json($latestCv);
+    }
+
+    /**
+     * Lecturer lấy tất cả ứng viên apply vào job mình đăng
+     */
+    public function getAlllecturer(Request $request)
+    {
+        $user = $request->get('user');
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        $teacherId = $user['sub'];
+
+        $applications = JobApplication::with([
+            'studentCv.student',
+            'jobPost',
+            'status'
+        ])
+            ->whereHas('jobPost', function ($q) use ($teacherId) {
+                $q->where('teacher_id', $teacherId);
+            })
+            ->orderByDesc('created_at')
+            ->get();
+
+        return response()->json($applications);
     }
 
     /**

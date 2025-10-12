@@ -28,6 +28,6 @@ class StudentCv extends Model
     }
     public function Student()
     {
-        return $this->hasMany(Student::class, 'student_id');
+        return $this->belongsTo(Student::class, 'student_id', 'id');
     }
 }

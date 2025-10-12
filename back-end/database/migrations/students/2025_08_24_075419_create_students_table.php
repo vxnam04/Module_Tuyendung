@@ -9,7 +9,7 @@ return new class extends Migration {
     {
         Schema::create('students', function (Blueprint $table) {
             $table->id();
-            $table->bigInteger('user_id')->unique()->comment('ID tham chiếu tới module users khác');
+            $table->bigInteger('student_account_id')->unique()->comment('ID tham chiếu tới module users khác');
             $table->string('full_name');
             $table->string('email')->nullable();
             $table->string('phone', 20)->nullable();

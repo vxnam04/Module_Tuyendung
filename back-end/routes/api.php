@@ -24,9 +24,16 @@ Route::middleware(['jwt.auth'])->group(function () {
     Route::post('/job/apply', [JobApplicationController::class, 'apply']);           // Student apply job
     Route::get('/job/getallcv', [JobApplicationController::class, 'getAll']);           // get cv moi nhat
     Route::get('/job/getcv_apply', [JobApplicationController::class, 'getcvnew']);           // getallcv
-    Route::get('/job/{id}/applicants', [JobApplicationController::class, 'getApplicants']); // Lecturer xem ứng viên
-    Route::put('/job/application/{id}/status', [JobApplicationController::class, 'updateStatus']); // Cập nhật trạng thái
+    // Lecturer lấy tất cả application (full info)
+    Route::get('/job/applications', [JobApplicationController::class, 'getAlllecturer']);
 
+    // Lecturer xem danh sách ứng viên theo job_post_id
+    Route::get('/job/{id}/applicants', [JobApplicationController::class, 'getApplicants']);
+
+    // Lecturer cập nhật trạng thái CV (id = application_id)
+    Route::put('/job/{id}/status', [JobApplicationController::class, 'updateStatus']);
+    // Search viec lam
+    Route::get('/jobs/search', [JobPostController::class, 'search']);
 
     // Vị trí chuyên môn, Kiểu IT suport hay dev 
     Route::get('/positions', [JobPostController::class, 'positions']);

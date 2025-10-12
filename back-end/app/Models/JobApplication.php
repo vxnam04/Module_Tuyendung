@@ -14,7 +14,8 @@ class JobApplication extends Model
         'cover_letter',
     ];
 
-    public function job()
+    // Nếu bảng job_applications có cột job_post_id
+    public function jobPost()
     {
         return $this->belongsTo(JobPost::class, 'job_post_id');
     }

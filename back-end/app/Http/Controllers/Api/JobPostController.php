@@ -426,4 +426,61 @@ class JobPostController extends Controller
         $locations = JobPostAddress::select('street', 'city', 'state')->get();
         return response()->json($locations);
     }
+    // Search Job
+    public function search(Request $request)
+    {
+        $keyword = trim($request->input('keyword', ''));
+
+        if (!$keyword) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Vui lòng nhập từ khóa tìm kiếm.'
+            ]);
+        }
+
+        $query = JobPost::with([
+            'addresses',
+            'positions',
+            'industries',
+            'experiences',
+            'salary',
+            'workTypes',
+            'teacher',
+            'level'
+        ]);
+
+        $query->where(function ($q) use ($keyword) {
+            $q->where('job_title', 'LIKE', "%{$keyword}%")
+                ->orWhere('company_name', 'LIKE', "%{$keyword}%")
+                ->orWhereHas('addresses', function ($sub) use ($keyword) {
+                    $sub->where('city', 'LIKE', "%{$keyword}%")
+                        ->orWhere('state', 'LIKE', "%{$keyword}%");
+                })
+                ->orWhereHas('industries', function ($sub) use ($keyword) {
+                    $sub->where('industry_name', 'LIKE', "%{$keyword}%");
+                })
+                ->orWhereHas('positions', function ($sub) use ($keyword) {
+                    $sub->where('position_name', 'LIKE', "%{$keyword}%");
+                })
+                ->orWhereHas('workTypes', function ($sub) use ($keyword) {
+                    $sub->where('work_type', 'LIKE', "%{$keyword}%");
+                })
+                ->orWhereHas('level', function ($sub) use ($keyword) {
+                    $sub->where('name', 'LIKE', "%{$keyword}%");
+                })
+                ->orWhereHas('experiences', function ($sub) use ($keyword) {
+                    $sub->where('years', 'LIKE', "%{$keyword}%");
+                });
+        });
+
+        $results = $query->orderByDesc('created_at')->limit(50)->get();
+
+        return response()->json([
+            'success' => true,
+            'message' => $results->isEmpty()
+                ? 'Không tìm thấy kết quả phù hợp.'
+                : 'Tìm kiếm thành công.',
+            'data' => $results
+        ]);
+    }
 }
