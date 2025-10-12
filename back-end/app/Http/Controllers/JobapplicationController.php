@@ -6,6 +6,7 @@ use App\Models\JobApplication;
 use App\Models\StudentCv;
 use App\Models\JobPosts\JobPost;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class JobApplicationController extends Controller
 {
@@ -186,5 +187,48 @@ class JobApplicationController extends Controller
             'message' => 'Cập nhật trạng thái thành công',
             'data'    => $application
         ]);
+    }
+    /**
+     * Lấy tất cả CV mà sinh viên hiện tại đã nộp
+     */
+    public function getMyApplications(Request $request)
+    {
+        $user = $request->get('user'); // Lấy user từ middleware JWT
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        $studentId = $user['sub'];
+
+        // Lấy tất cả job application mà studentId đã nộp
+        $applications = JobApplication::with(['studentCv', 'jobPost', 'status'])
+            ->whereHas('studentCv', function ($q) use ($studentId) {
+                $q->where('student_id', $studentId);
+            })
+            ->orderByDesc('created_at')
+            ->get();
+
+        return response()->json($applications);
+    }
+    /**
+     * Lấy 8 ngành nghề có nhiều người ứng tuyển nhất
+     */
+    public function getTopIndustries()
+    {
+        $topIndustries = DB::table('job_post_industries as jpi')
+            ->join('job_posts as jp', 'jp.id', '=', 'jpi.job_post_id')
+            ->leftJoin('job_applications as ja', 'ja.job_post_id', '=', 'jp.id')
+            ->select(
+                'jpi.industry_name',
+                DB::raw('COUNT(DISTINCT ja.id) as applied_count')
+            )
+            ->where('jpi.industry_name', 'not like', '%khác%')
+
+            ->groupBy('jpi.industry_name')
+            ->orderByDesc('applied_count')
+            ->limit(8)
+            ->get();
+
+        return response()->json($topIndustries);
     }
 }
