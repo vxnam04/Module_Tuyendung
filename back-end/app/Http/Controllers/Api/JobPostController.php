@@ -277,6 +277,7 @@ class JobPostController extends Controller
             $user = $request->attributes->get('user');
             $job = JobPost::findOrFail($id);
 
+            // Chỉ cho teacher tạo job mới được sửa
             if ($job->teacher->lecturer_id != ($user['sub'] ?? null)) {
                 return response()->json(['message' => 'Forbidden'], 403);
             }
@@ -286,14 +287,25 @@ class JobPostController extends Controller
                 'company_name' => 'sometimes|string|max:255',
                 'description'  => 'nullable|string',
                 'application_deadline' => 'nullable|date',
-                'level_id'     => 'nullable|string|max:100', // lưu name trực tiếp
+                'level_id'     => 'nullable|string|max:100',
                 'industries'   => 'nullable|array',
                 'industries.*' => 'string|max:100',
+                'positions'    => 'nullable|string|max:255',
+                'salary'       => 'nullable|array',
+                'salary.salary_min' => 'nullable|integer|min:0',
+                'salary.salary_max' => 'nullable|integer|min:0',
+                'salary.currency'   => 'nullable|string|in:VND,USD,EUR,JPY'
             ]);
 
-            $job->update($request->only(['job_title', 'company_name', 'description', 'application_deadline', 'quantity']));
+            // Cập nhật các trường cơ bản
+            $job->update($request->only([
+                'job_title',
+                'company_name',
+                'description',
+                'application_deadline'
+            ]));
 
-            // Update level
+            // Cập nhật level
             if (array_key_exists('level_id', $validated)) {
                 if ($validated['level_id']) {
                     Level::updateOrCreate(
@@ -305,47 +317,95 @@ class JobPostController extends Controller
                 }
             }
 
-            // Update industries
+            // Cập nhật industries
             if (array_key_exists('industries', $validated)) {
-                $job->industries()->delete(); // xóa cũ
+                $job->industries()->delete();
                 foreach ($validated['industries'] as $industryName) {
-                    $job->industries()->create([
-                        'industry_name' => $industryName
-                    ]);
+                    $job->industries()->create(['industry_name' => $industryName]);
                 }
+            }
+
+            // Cập nhật positions
+            if (array_key_exists('positions', $validated)) {
+                $job->positions()->updateOrCreate(
+                    ['job_post_id' => $job->id],
+                    ['position_name' => $validated['positions']]
+                );
+            }
+
+            // Cập nhật salary
+            if (array_key_exists('salary', $validated)) {
+                $job->salary()->updateOrCreate(
+                    ['job_post_id' => $job->id],
+                    [
+                        'salary_min' => $validated['salary']['salary_min'] ?? null,
+                        'salary_max' => $validated['salary']['salary_max'] ?? null,
+                        'currency'   => $validated['salary']['currency'] ?? 'VND'
+                    ]
+                );
             }
 
             return response()->json([
                 'message' => 'Job post updated successfully',
-                'job_post' => $job->fresh()->load(['positions', 'level', 'industries'])
+                'job_post' => $job->fresh()->load(['positions', 'level', 'industries', 'salary'])
             ]);
         } catch (\Exception $e) {
-            Log::error('Error updating job post: ' . $e->getMessage());
-            return response()->json(['message' => 'Error updating job post', 'error' => $e->getMessage()], 500);
+            \Log::error('Error updating job post: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Error updating job post',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 
     /**
      * Xóa job post
      */
+
     public function destroy(Request $request, $id)
     {
         try {
             $user = $request->attributes->get('user');
+            \Log::info('User in destroy:', [$user]);
+
             $job = JobPost::findOrFail($id);
 
-            if ($job->teacher->lecturer_id != ($user['sub'] ?? null)) {
+            // Kiểm tra quyền
+            $isAdmin = isset($user['is_admin']) && $user['is_admin'] === true;
+            $isOwner = $job->teacher && $job->teacher->lecturer_id == ($user['sub'] ?? null);
+
+            if (!$isAdmin && !$isOwner) {
                 return response()->json(['message' => 'Forbidden'], 403);
             }
 
+            // Xóa các dữ liệu liên quan (nếu chưa có cascade)
+            $job->positions()->delete();
+            $job->addresses()->delete();
+            $job->workTypes()->delete();
+            $job->salary()->delete();
+            $job->experiences()->delete();
+            $job->skills()->delete();
+            $job->educationLevels()->delete();
+            $job->benefits()->delete();
+            $job->workingDays()->delete();
+            $job->workingTimes()->delete();
+            $job->level()->delete();
+            $job->industries()->delete();
+
+            // Cuối cùng xóa job
             $job->delete();
 
             return response()->json(['message' => 'Job post deleted successfully']);
         } catch (\Exception $e) {
-            Log::error('Error deleting job post: ' . $e->getMessage());
-            return response()->json(['message' => 'Error deleting job post', 'error' => $e->getMessage()], 500);
+            \Log::error('Error deleting job post: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Error deleting job post',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
+
+
 
     /**
      * Lấy positions

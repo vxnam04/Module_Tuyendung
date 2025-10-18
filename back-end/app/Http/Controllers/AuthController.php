@@ -18,9 +18,15 @@ class AuthController extends Controller
 
         $user = Auth::user();
 
+        // Thêm thông tin user vào token
         $payload = [
             'iss' => "laravel-jwt", // Issuer
             'sub' => $user->id,     // Subject = user id
+            'email' => $user->email,
+            'username' => $user->username ?? null,
+            'full_name' => $user->name,
+            'user_type' => $user->user_type ?? 'student', // 👈 thêm loại user
+            'is_admin' => (bool)($user->is_admin ?? false), // 👈 thêm quyền admin
             'iat' => time(),        // Issued at
             'exp' => time() + 60 * 60 // Expiration = 1h
         ];
