@@ -267,93 +267,146 @@ class JobPostController extends Controller
 
         return response()->json($job);
     }
-
-    /**
-     * Cập nhật job post
-     */
     public function update(Request $request, $id)
     {
         try {
             $user = $request->attributes->get('user');
+            \Log::info('User in update:', [$user]);
+
             $job = JobPost::findOrFail($id);
 
-            // Chỉ cho teacher tạo job mới được sửa
-            if ($job->teacher->lecturer_id != ($user['sub'] ?? null)) {
+            // 🔐 Kiểm tra quyền sửa
+            $isAdmin = isset($user['is_admin']) && $user['is_admin'] === true;
+            $isOwner = $job->teacher && $job->teacher->lecturer_id == ($user['sub'] ?? null);
+
+            if (!$isAdmin && !$isOwner) {
                 return response()->json(['message' => 'Forbidden'], 403);
             }
 
+            // ✅ Xác thực dữ liệu cơ bản (chấp nhận nested object từ frontend)
             $validated = $request->validate([
-                'job_title'    => 'sometimes|string|max:255',
-                'company_name' => 'sometimes|string|max:255',
+                'job_title'    => 'nullable|string|max:255',
+                'company_name' => 'nullable|string|max:255',
                 'description'  => 'nullable|string',
-                'application_deadline' => 'nullable|date',
-                'level_id'     => 'nullable|string|max:100',
                 'industries'   => 'nullable|array',
-                'industries.*' => 'string|max:100',
-                'positions'    => 'nullable|string|max:255',
+                'industries.*.industry_name' => 'required|string|max:100',
+                'positions'    => 'nullable|array',
+                'positions.*.position_name' => 'nullable|string|max:255',
+                'positions.*.quantity' => 'nullable|integer|min:1',
+                'level'        => 'nullable|array',
+                'level.name'   => 'nullable|string|max:100',
                 'salary'       => 'nullable|array',
                 'salary.salary_min' => 'nullable|integer|min:0',
                 'salary.salary_max' => 'nullable|integer|min:0',
-                'salary.currency'   => 'nullable|string|in:VND,USD,EUR,JPY'
+                'salary.currency'   => 'nullable|string|in:VND,USD,EUR,JPY',
+                'benefits'     => 'nullable|array',
+                'benefits.*.benefit_type' => 'nullable|string|max:255',
+                'benefits.*.description'  => 'nullable|string',
+                'working_days' => 'nullable|array',
+                'working_days.*.day_name' => 'nullable|string|max:50',
+                'working_time' => 'nullable|array',
+                'working_time.start' => 'nullable|string',
+                'working_time.end'   => 'nullable|string',
             ]);
 
-            // Cập nhật các trường cơ bản
-            $job->update($request->only([
-                'job_title',
-                'company_name',
-                'description',
-                'application_deadline'
-            ]));
+            // ✅ Cập nhật bảng job_posts
+            $job->update([
+                'job_title'    => $validated['job_title'] ?? $job->job_title,
+                'company_name' => $validated['company_name'] ?? $job->company_name,
+                'description'  => $validated['description'] ?? $job->description,
+            ]);
 
-            // Cập nhật level
-            if (array_key_exists('level_id', $validated)) {
-                if ($validated['level_id']) {
-                    Level::updateOrCreate(
-                        ['job_post_id' => $job->id],
-                        ['name' => $validated['level_id']]
-                    );
-                } else {
-                    $job->level()->delete();
-                }
-            }
-
-            // Cập nhật industries
-            if (array_key_exists('industries', $validated)) {
-                $job->industries()->delete();
-                foreach ($validated['industries'] as $industryName) {
-                    $job->industries()->create(['industry_name' => $industryName]);
-                }
-            }
-
-            // Cập nhật positions
-            if (array_key_exists('positions', $validated)) {
-                $job->positions()->updateOrCreate(
+            // ✅ Cập nhật level (bảng 1-1)
+            if (!empty($validated['level']['name'])) {
+                $job->level()->updateOrCreate(
                     ['job_post_id' => $job->id],
-                    ['position_name' => $validated['positions']]
+                    ['name' => $validated['level']['name']]
                 );
             }
 
-            // Cập nhật salary
-            if (array_key_exists('salary', $validated)) {
+            // ✅ Cập nhật industries (bảng 1-n)
+            if (isset($validated['industries'])) {
+                $job->industries()->delete();
+                foreach ($validated['industries'] as $industry) {
+                    $job->industries()->create([
+                        'industry_name' => $industry['industry_name'],
+                    ]);
+                }
+            }
+
+            // ✅ Cập nhật positions
+            if (isset($validated['positions'])) {
+                $job->positions()->delete();
+                foreach ($validated['positions'] as $pos) {
+                    $job->positions()->create([
+                        'position_name' => $pos['position_name'] ?? null,
+                        'quantity' => $pos['quantity'] ?? 1,
+                    ]);
+                }
+            }
+
+            // ✅ Cập nhật salary
+            if (isset($validated['salary'])) {
                 $job->salary()->updateOrCreate(
                     ['job_post_id' => $job->id],
                     [
                         'salary_min' => $validated['salary']['salary_min'] ?? null,
                         'salary_max' => $validated['salary']['salary_max'] ?? null,
-                        'currency'   => $validated['salary']['currency'] ?? 'VND'
+                        'currency'   => $validated['salary']['currency'] ?? 'VND',
                     ]
                 );
             }
 
+            // ✅ Cập nhật benefits
+            if (isset($validated['benefits'])) {
+                $job->benefits()->delete();
+                foreach ($validated['benefits'] as $b) {
+                    $job->benefits()->create([
+                        'benefit_type' => $b['benefit_type'] ?? '',
+                        'description'  => $b['description'] ?? '',
+                    ]);
+                }
+            }
+
+            // ✅ Cập nhật working_days
+            if (isset($validated['working_days'])) {
+                $job->workingDays()->delete();
+                foreach ($validated['working_days'] as $day) {
+                    $job->workingDays()->create([
+                        'day_name' => $day['day_name'],
+                    ]);
+                }
+            }
+
+            // ✅ Cập nhật working_time
+            if (isset($validated['working_time'])) {
+                $job->workingTimes()->updateOrCreate(
+                    ['job_post_id' => $job->id],
+                    [
+                        'start' => $validated['working_time']['start'] ?? null,
+                        'end'   => $validated['working_time']['end'] ?? null,
+                    ]
+                );
+            }
+
+            // ✅ Trả về dữ liệu sau khi cập nhật
             return response()->json([
-                'message' => 'Job post updated successfully',
-                'job_post' => $job->fresh()->load(['positions', 'level', 'industries', 'salary'])
+                'message' => 'Cập nhật công việc thành công!',
+                'job_post' => $job->fresh()->load([
+                    'positions',
+                    'level',
+                    'industries',
+                    'salary',
+                    'benefits',
+                    'workingDays',
+                    'workingTimes'
+                ]),
             ]);
         } catch (\Exception $e) {
-            \Log::error('Error updating job post: ' . $e->getMessage());
+            \Log::error('❌ Lỗi cập nhật job post: ' . $e->getMessage());
             return response()->json([
-                'message' => 'Error updating job post',
-                'error' => $e->getMessage()
+                'message' => 'Lỗi khi cập nhật công việc',
+                'error' => $e->getMessage(),
             ], 500);
         }
     }

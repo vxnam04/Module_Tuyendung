@@ -1,3 +1,4 @@
-[2025-10-18 07:00:32] local.INFO: User in destroy: [{"sub":1,"user_type":"lecturer","username":"admin","email":"admin@system.com","full_name":"Admin System","is_admin":true,"iat":1760770673,"exp":1760774273}] 
-[2025-10-18 07:01:15] local.INFO: User in destroy: [{"sub":1,"user_type":"lecturer","username":"admin","email":"admin@system.com","full_name":"Admin System","is_admin":true,"iat":1760770673,"exp":1760774273}] 
-[2025-10-18 07:02:23] local.INFO: User in destroy: [{"sub":1,"user_type":"lecturer","username":"admin","email":"admin@system.com","full_name":"Admin System","is_admin":true,"iat":1760770673,"exp":1760774273}] 
+[2025-10-23 07:32:20] local.INFO: User in update: [{"sub":1,"user_type":"lecturer","username":"admin","email":"admin@system.com","full_name":"Admin System","is_admin":true,"iat":1761202108,"exp":1761205708}] 
+[2025-10-23 07:32:20] local.ERROR: ❌ Lỗi cập nhật job post: Call to undefined relationship [workingTime] on model [App\Models\JobPosts\JobPost].  
+[2025-10-23 07:36:09] local.INFO: User in update: [{"sub":1,"user_type":"lecturer","username":"admin","email":"admin@system.com","full_name":"Admin System","is_admin":true,"iat":1761202108,"exp":1761205708}] 
+[2025-10-23 07:36:28] local.INFO: User in update: [{"sub":1,"user_type":"lecturer","username":"admin","email":"admin@system.com","full_name":"Admin System","is_admin":true,"iat":1761202108,"exp":1761205708}] 
