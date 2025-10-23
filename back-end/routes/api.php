@@ -4,7 +4,7 @@ use App\Http\Controllers\JobApplicationController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\JobPostController;
 use App\Http\Controllers\UsergetAll1Controller;
-
+use App\Http\Controllers\DashboardController;
 // Route test kết nối
 Route::get('/ping', function () {
     return response()->json(['message' => 'Laravel OK']);
@@ -50,5 +50,6 @@ Route::middleware(['jwt.auth'])->group(function () {
     Route::get('/experiences', [JobPostController::class, 'experiences']);     // Kinh nghiệm
     Route::get('/levels', [JobPostController::class, 'levels']);               // Cấp bậc
     Route::get('/location', [JobPostController::class, 'location']);           // Địa điểm
-
+    // ADMIN
+    Route::get('/admin/dashboard', [DashboardController::class, 'index']);
 });
