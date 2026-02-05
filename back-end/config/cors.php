@@ -5,7 +5,7 @@ return [
     'allowed_methods' => ['*'], // tất cả GET, POST, PUT, DELETE...
     'allowed_origins' => [
         'http://localhost:3000',
-        'http://localhost:3001'
+        'http://localhost:3001',
         'http://103.126.161.228:3001',
         'http://103.126.161.228:3000',
         'http://103.126.161.228:3005',
