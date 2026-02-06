@@ -16,3 +16,18 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
+
+# dung track cai nay, xin gnuoi
+
+/bootstrap/cache/packages.php
+/bootstrap/cache/services.php
+/bootstrap/cache/config.php
+/bootstrap/cache/routes-v7.php
+
+/storage/framework/cache/data/*
+/storage/framework/sessions/*
+/storage/framework/testing/*
+/storage/framework/views/*
+
+/storage/logs/*.log
+!/storage/logs/.gitkeep
