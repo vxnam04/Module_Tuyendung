@@ -16,6 +16,7 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
+<<<<<<< HEAD
 
 # dung track cai nay, xin gnuoi
 
@@ -31,3 +32,6 @@ yarn-error.log
 
 /storage/logs/*.log
 !/storage/logs/.gitkeep
+=======
+back-end/storage/framework/cache/
+>>>>>>> origin/main
