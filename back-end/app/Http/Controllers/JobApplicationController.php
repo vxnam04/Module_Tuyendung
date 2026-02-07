@@ -15,14 +15,16 @@ class JobApplicationController extends Controller
      */
     public function apply(Request $request)
     {
-        $user = $request->get('user'); // Lấy user từ middleware JWT
-        if (!$user) {
+        // ✅ LẤY USER ĐÚNG TỪ JWT MIDDLEWARE
+        $user = $request->attributes->get('user');
+        if (!$user || !isset($user['sub'])) {
             return response()->json(['message' => 'User chưa đăng nhập'], 401);
         }
 
-        $studentId = $user['sub']; // ID sinh viên từ token
+        $studentId = $user['sub'];
         $cvId = $request->student_cv_id;
 
+        // ✅ VALIDATE
         $request->validate([
             'job_post_id'   => 'required|integer|exists:job_posts,id',
             'cover_letter'  => 'nullable|string',
@@ -35,10 +37,15 @@ class JobApplicationController extends Controller
             'file'          => 'nullable|file|mimes:pdf,doc,docx|max:2048',
         ]);
 
-        // Nếu không chọn CV có sẵn → kiểm tra upload CV mới
+        /**
+         * ===============================
+         * 1️⃣ XỬ LÝ CV
+         * ===============================
+         */
+
+        // ❌ Không chọn CV có sẵn → upload CV mới
         if (!$cvId) {
             if ($request->hasFile('file')) {
-                // Lưu trực tiếp vào public/cvs
                 $file = $request->file('file');
                 $fileName = time() . '_' . $file->getClientOriginalName();
                 $file->move(public_path('cvs'), $fileName);
@@ -50,12 +57,12 @@ class JobApplicationController extends Controller
                     'email'      => $request->email,
                     'title'      => $request->title,
                     'summary'    => $request->summary,
-                    'file_url'   => url('cvs/' . $fileName), // URL trực tiếp mở được
+                    'file_url'   => url('cvs/' . $fileName),
                 ]);
 
                 $cvId = $cv->id;
             } else {
-                // Lấy CV mới nhất nếu không upload
+                // 👉 Không upload → lấy CV mới nhất
                 $latestCv = StudentCv::where('student_id', $studentId)
                     ->latest('created_at')
                     ->first();
@@ -63,30 +70,60 @@ class JobApplicationController extends Controller
                 if (!$latestCv) {
                     return response()->json(['message' => 'Bạn chưa có CV nào'], 400);
                 }
+
                 $cvId = $latestCv->id;
             }
         }
 
-        // Kiểm tra nếu đã apply job này với cùng CV
-        $exists = JobApplication::where('job_post_id', $request->job_post_id)
-            ->where('student_cv_id', $cvId)
+        /**
+         * ===============================
+         * 2️⃣ CHECK CV CÓ THUỘC STUDENT
+         * ===============================
+         */
+        $cv = StudentCv::where('id', $cvId)
+            ->where('student_id', $studentId)
             ->first();
 
-        if ($exists) {
-            return response()->json(['message' => 'Bạn đã ứng tuyển công việc này rồi'], 400);
+        if (!$cv) {
+            return response()->json([
+                'message' => 'CV không hợp lệ hoặc không thuộc về bạn'
+            ], 403);
         }
 
+        /**
+         * ===============================
+         * 3️⃣ CHỐNG APPLY TRÙNG
+         * (1 job – 1 student chỉ apply 1 lần)
+         * ===============================
+         */
+        $exists = JobApplication::where('job_post_id', $request->job_post_id)
+            ->whereHas('studentCv', function ($q) use ($studentId) {
+                $q->where('student_id', $studentId);
+            })
+            ->exists();
+
+        if ($exists) {
+            return response()->json([
+                'message' => 'Bạn đã ứng tuyển công việc này rồi'
+            ], 400);
+        }
+
+        /**
+         * ===============================
+         * 4️⃣ TẠO APPLICATION
+         * ===============================
+         */
         $application = JobApplication::create([
             'job_post_id'   => $request->job_post_id,
             'student_cv_id' => $cvId,
-            'cv_status_id'  => 1, // default: pending
+            'cv_status_id'  => 1, // pending
             'cover_letter'  => $request->cover_letter,
         ]);
 
         return response()->json([
             'message' => 'Ứng tuyển thành công',
             'data'    => $application
-        ]);
+        ], 201);
     }
 
     /**
@@ -94,8 +131,8 @@ class JobApplicationController extends Controller
      */
     public function getAll(Request $request)
     {
-        $user = $request->get('user');
-        if (!$user) {
+        $user = $request->attributes->get('user');
+        if (!$user || !isset($user['sub'])) {
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
@@ -116,9 +153,9 @@ class JobApplicationController extends Controller
      */
     public function getcvnew(Request $request)
     {
-        $user = $request->get('user');
-        if (!$user) {
-            return response()->json(['message' => 'User chưa đăng nhập'], 401);
+        $user = $request->attributes->get('user');
+        if (!$user || !isset($user['sub'])) {
+            return response()->json(['message' => 'Unauthorized'], 401);
         }
 
         $studentId = $user['sub'];
@@ -135,8 +172,8 @@ class JobApplicationController extends Controller
      */
     public function getAlllecturer(Request $request)
     {
-        $user = $request->get('user');
-        if (!$user) {
+        $user = $request->attributes->get('user');
+        if (!$user || !isset($user['sub'])) {
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
@@ -157,7 +194,7 @@ class JobApplicationController extends Controller
     }
 
     /**
-     * Lecturer xem danh sách ứng viên theo job_post
+     * Lecturer xem ứng viên theo job_post
      */
     public function getApplicants(Request $request, $id)
     {
@@ -188,19 +225,19 @@ class JobApplicationController extends Controller
             'data'    => $application
         ]);
     }
+
     /**
-     * Lấy tất cả CV mà sinh viên hiện tại đã nộp
+     * Lấy tất cả CV mà sinh viên đã nộp
      */
     public function getMyApplications(Request $request)
     {
-        $user = $request->get('user'); // Lấy user từ middleware JWT
-        if (!$user) {
+        $user = $request->attributes->get('user');
+        if (!$user || !isset($user['sub'])) {
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
         $studentId = $user['sub'];
 
-        // Lấy tất cả job application mà studentId đã nộp
         $applications = JobApplication::with(['studentCv', 'jobPost', 'status'])
             ->whereHas('studentCv', function ($q) use ($studentId) {
                 $q->where('student_id', $studentId);
@@ -210,8 +247,9 @@ class JobApplicationController extends Controller
 
         return response()->json($applications);
     }
+
     /**
-     * Lấy 8 ngành nghề có nhiều người ứng tuyển nhất
+     * Lấy top 8 ngành nghề có nhiều ứng tuyển nhất
      */
     public function getTopIndustries()
     {
@@ -223,7 +261,6 @@ class JobApplicationController extends Controller
                 DB::raw('COUNT(DISTINCT ja.id) as applied_count')
             )
             ->where('jpi.industry_name', 'not like', '%khác%')
-
             ->groupBy('jpi.industry_name')
             ->orderByDesc('applied_count')
             ->limit(8)
