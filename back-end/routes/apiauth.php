@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Modules\Auth\app\Http\Controllers\AuthUserController\AuthController;
 use Modules\Auth\app\Http\Controllers\AuthUserController\StudentController;
 use Modules\Auth\app\Http\Controllers\AuthUserController\LecturerController;
+use Modules\Auth\app\Http\Controllers\AuthUserController\TeacherController;
 use Modules\Auth\app\Http\Controllers\DepartmentController\DepartmentController;
 use Modules\Auth\app\Http\Controllers\ClassController\ClassController;
 
@@ -28,7 +29,10 @@ Route::prefix('v1')->group(function () {
         Route::put('/students/{id}', [StudentController::class, 'update']);
         Route::delete('/students/{id}', [StudentController::class, 'destroy']);
     });
-
+ // Teacher routes 
+    Route::middleware(['jwt', 'admin'])->group(function () {
+        Route::get('/teacher/profile', [TeacherController::class, 'index']);
+    });
     // Lecturer routes - Chỉ admin mới có thể quản lý
     Route::middleware(['jwt', 'admin'])->group(function () {
         Route::get('/lecturers', [LecturerController::class, 'index']);
