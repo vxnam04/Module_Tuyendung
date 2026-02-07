@@ -9,11 +9,17 @@ class StudentSeeder extends Seeder
 {
     public function run(): void
     {
-        DB::table('students')->insert([
-            'student_account_id' => 1,
-            'masv' => 'SV00001',
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        $students = [];
+
+        for ($i = 1; $i <= 30; $i++) {
+            $students[] = [
+                'student_account_id' => $i,
+                'masv' => 'SV' . str_pad($i, 5, '0', STR_PAD_LEFT),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+        }
+
+        DB::table('students')->insert($students);
     }
 }

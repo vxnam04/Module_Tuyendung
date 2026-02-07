@@ -9,25 +9,17 @@ class TeachersSeeder extends Seeder
 {
     public function run(): void
     {
-        DB::table('teachers')->insert([
-            [
-                'lecturer_id' => 1,
-                'avatar_url' => 'https://example.com/avatar1.png',
+        $teachers = [];
+
+        for ($i = 0; $i <= 30; $i++) {
+            $teachers[] = [
+                'lecturer_id' => 2 + $i,
+                'avatar_url' => 'https://example.com/avatar' . (2 + $i) . '.png',
                 'created_at' => now(),
                 'updated_at' => now(),
-            ],
-            [
-                'lecturer_id' => 2,
-                'avatar_url' => 'https://example.com/avatar2.png',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-            [
-                'lecturer_id' => 3,
-                'avatar_url' => 'https://example.com/avatar3.png',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-        ]);
+            ];
+        }
+
+        DB::table('teachers')->insert($teachers);
     }
 }
