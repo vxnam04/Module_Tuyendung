@@ -9,6 +9,8 @@ return [
         'http://103.126.161.228:3001',
         'http://103.126.161.228:3000',
         'http://103.126.161.228:3005',
+        'http://hethongdientu.khoacongnghethongtinhpc.io.vn',
+        'https://hethongdientu.khoacongnghethongtinhpc.io.vn',
     ], // origin frontend của bạn
     'allowed_origins_patterns' => [],
     'allowed_headers' => ['*'], // cho phép tất cả header
